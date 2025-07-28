@@ -1,0 +1,19 @@
+<odoo>
+    <record id="sh_hr_department_view" model="ir.ui.view">
+        <field name="name">Department View</field>
+        <field name="model">hr.department</field>
+        <field name="inherit_id" ref="hr.view_department_form" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='name']" position="after">
+                <group>
+                    <field name="sh_code"></field>
+                    <field name="description"></field>
+                </group>
+
+            </xpath>
+
+
+        </field>
+    </record>
+</odoo>

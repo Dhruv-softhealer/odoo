@@ -1,0 +1,41 @@
+<odoo>
+    <record id="sh_clinic_access_group" model="ir.module.category">
+        <field name="name">Clinic Access</field>
+    </record>
+
+<!-- ============================= Receptioniest ================================ -->
+
+    <record id="clinic_group_receptioniest" model="res.groups">
+        <field name="name">Receptioniest</field>
+        <field name="category_id" ref="sh_clinic_mgmt.sh_clinic_access_group" />
+        <field name="comment">The Receptioniest will be able to join support channels.</field>
+    </record>
+
+<!-- ============================= Doctor ================================ -->
+
+    <record id="clinic_group_doctor" model="res.groups">
+        <field name="name">Doctor</field>
+        <field name="category_id" ref="sh_clinic_mgmt.sh_clinic_access_group" />
+        <field name="comment">The Doctor will be able to join support channels.</field>
+        <field name="implied_ids" eval="[(4,ref('clinic_group_receptioniest'))]"></field>
+    </record>
+
+<!-- ============================= Admin ================================ -->
+
+    <record id="clinic_group_admin" model="res.groups">
+        <field name="name">Admin</field>
+        <field name="category_id" ref="sh_clinic_mgmt.sh_clinic_access_group" />
+        <field name="comment">The Admin will be able to join support channels.</field>
+        <field name="implied_ids" eval="[(4,ref('clinic_group_doctor'))]"></field>
+    </record>
+
+
+    <!-- ================================== Record Rules =============================== -->
+
+    <record id="sh_appointment_reception_rule" model="ir.rule">
+        <field name="name">Receptioniest Rules</field>
+        <field name="model_id" ref="model_sh_appointment"/>
+        <field name="domain_force">[('create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('sh_clinic_mgmt.clinic_group_receptioniest'))]"/>
+    </record>
+</odoo>

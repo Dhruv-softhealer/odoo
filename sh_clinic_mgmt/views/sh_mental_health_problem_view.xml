@@ -1,0 +1,41 @@
+<odoo>
+    <record id="sh_mental_health_problem_list_view" model="ir.ui.view">
+        <field name="name">Mental Health Problem</field>
+        <field name="model">sh.mental.health.problem</field>
+        <field name="arch" type="xml">
+            <list string="Mental Health Problem">
+                <field name="name"></field>
+            </list>
+        </field>
+    </record>
+
+    <record id="sh_mental_health_problem_form_view" model="ir.ui.view">
+        <field name="name">Mental Health Problem</field>
+        <field name="model">sh.mental.health.problem</field>
+        <field name="arch" type="xml">
+            <form string="Mental Health Problem">
+                <sheet>
+                    <group>
+                        <field name="name"></field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_mental_health_problem_search_view" model="ir.ui.view">
+        <field name="name">Search Mental Health Problem</field>
+        <field name="model">sh.mental.health.problem</field>
+        <field name="arch" type="xml">
+            <search string="Search Mental Health Problem">
+                <field name="name"></field>
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_mental_health_problem_action_view" model="ir.actions.act_window">
+        <field name="name">Mental Health Problem</field>
+        <field name="res_model">sh.mental.health.problem</field>
+        <field name="view_mode">list,form,search</field>
+    </record>
+</odoo>

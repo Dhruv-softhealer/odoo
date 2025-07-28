@@ -1,0 +1,26 @@
+<odoo>
+    <record id="sh_hr_job_view" model="ir.ui.view">
+        <field name="name">Job View</field>
+        <field name="model">hr.job</field>
+        <field name="inherit_id" ref="hr.view_hr_job_form" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='name']" position="after">
+                <group>
+                    <group>
+                        <field name="sh_code"></field>
+                        <field name="sh_department"></field>
+                        <field name="description"></field>
+                    </group>
+                    <group>
+                        <field name="sh_salary_range"></field>
+                        <field name="sh_required_qualification"></field>
+                        <field name="sh_experience_required"></field>
+                    </group>
+                </group>
+            </xpath>
+
+
+        </field>
+    </record>
+</odoo>

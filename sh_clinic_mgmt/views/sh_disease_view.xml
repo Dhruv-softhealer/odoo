@@ -1,0 +1,55 @@
+<odoo>
+    <record id="sh_disease_list_view" model="ir.ui.view">
+        <field name="name">Disease</field>
+        <field name="model">sh.disease</field>
+        <field name="arch" type="xml">
+            <list string="Disease">
+                <field name="name"></field>
+                <field name="sh_category_ids" widget="many2many_tags"></field>
+                <field name="sh_symptom_ids" widget="many2many_tags"></field>
+                <field name="description"></field>
+                <field name="sh_treatment_plan"></field>
+            </list>
+        </field>
+    </record>
+
+    <record id="sh_disease_form_view" model="ir.ui.view">
+        <field name="name">Disease</field>
+        <field name="model">sh.disease</field>
+        <field name="arch" type="xml">
+            <form string="Disease">
+                <sheet>
+                    <group>
+                        <field name="name"></field>
+                        <field name="sh_category_ids" widget="many2many_tags"></field>
+                        <field name="sh_symptom_ids" widget="many2many_tags"></field>
+                        <field name="description"></field>
+                        <field name="sh_treatment_plan"></field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_disease_search_view" model="ir.ui.view">
+        <field name="name">Search Disease</field>
+        <field name="model">sh.disease</field>
+        <field name="arch" type="xml">
+            <search string="Search Disease">
+                <field name="name"></field>
+                <field name="description"></field>
+                <field name="sh_treatment_plan"></field>
+                <group expand="0" string="Group BY">
+                    <filter name="group_by_sh_category_ids" string="Category" context="{'group_by' : 'sh_category_ids'}"></filter>
+                    <filter name="group_by_sh_category_ids" string="Symptom" context="{'group_by' : 'sh_symptom_ids'}"></filter>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_disease_action_view" model="ir.actions.act_window">
+        <field name="name">Disease</field>
+        <field name="res_model">sh.disease</field>
+        <field name="view_mode">list,form,search</field>
+    </record>
+</odoo>

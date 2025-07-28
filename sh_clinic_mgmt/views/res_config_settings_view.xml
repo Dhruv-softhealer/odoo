@@ -1,0 +1,17 @@
+<odoo>
+    <record id="sh_res_config_setting_view" model="ir.ui.view">
+        <field name="name">Setting View</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='languages']" position="after">
+
+                <block title="Patient Case Days" name="patient_case_count0">0
+                    <setting id="patient_case">
+                        <field name="sh_case_days"></field>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

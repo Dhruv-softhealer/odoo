@@ -1,0 +1,15 @@
+<odoo>
+    <record id="sh_product_template_view" model="ir.ui.view">
+        <field name="name">Product View</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='type']" position="before">
+                <field name="sh_medicine_type"></field>
+                <field name="sh_brand"></field>
+                <field name="sh_side_effect"></field>
+                <!-- <field name="provided_by_us"></field> -->
+            </xpath>
+        </field>
+    </record>
+</odoo>

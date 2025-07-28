@@ -1,0 +1,55 @@
+<odoo>
+    <record id="sh_medicine_list_view" model="ir.ui.view">
+        <field name="name">Medicine</field>
+        <field name="model">sh.medicine</field>
+        <field name="arch" type="xml">
+            <list string="Medicine">
+                <field name="name"></field>
+                <field name="sh_provided_by_us"></field>
+            </list>
+        </field>
+    </record>
+
+    <record id="sh_medicine_form_view" model="ir.ui.view">
+        <field name="name">Medicine</field>
+        <field name="model">sh.medicine</field>
+        <field name="arch" type="xml">
+            <form string="Medicine">
+                <sheet>
+                    <header>
+                        <button name="create_product" string="Create Product"
+                        invisible="sh_product_id or not sh_provided_by_us" type="object" class="btn-primary"></button>
+                    </header>
+                    <group>
+                        <field name="name"></field>
+                        <field name="sh_type"></field>
+                        <field name="sh_provided_by_us"></field>
+                        <field name="sh_product_id" invisible="not sh_provided_by_us"></field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- <record id="sh_medicine_search_view" model="ir.ui.view">
+        <field name="name">Search Medicine</field>
+        <field name="model">sh.medicine</field>
+        <field name="arch" type="xml">
+            <search string="Search Medicine">
+                <field name="name"></field>
+
+                <filter name="filter_is_provided_by_us" string="Provided by us" domain="[('sh_provided_by_us', '=', True)]"></filter>
+                <group expand="0" string="">
+                    <filter name="filter_type" string="Medicine Type" context="[('group_by', '=', 'sh_type')]"></filter>
+                    <filter name="filter_sh_product_id" string="Product" context="[('group_by', '=', 'sh_product_id')]"></filter>
+                </group>
+            </search>
+        </field>
+    </record> -->
+
+    <record id="sh_medicine_action_view" model="ir.actions.act_window">
+        <field name="name">Medicine</field>
+        <field name="res_model">sh.medicine</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

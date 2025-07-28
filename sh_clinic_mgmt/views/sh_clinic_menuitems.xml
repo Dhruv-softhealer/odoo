@@ -1,0 +1,56 @@
+<odoo>
+    <menuitem id="sh_clinic_root_action" name="Clinic"
+        action="sh_clinic_mgmt.sh_appointment_action_view">
+
+        <menuitem id="sh_slot_config_action" name="Slot" sequence="1" action="sh_slots_action_view">
+
+        </menuitem>
+        <menuitem id="sh_appointment_config_action" name="Appointment" sequence="2">
+            <menuitem id="menu_appointment_summary"
+            name="Appointment Summary"
+            action="action_appointment_summary_wizard" sequence="1"/>
+            
+            <menuitem id="menu_appointment_action" name="Appointment"
+                action="sh_appointment_action_view" sequence="2"/>
+
+        </menuitem>
+        <menuitem id="sh_patient_config_action" name="Patient" sequence="3"
+            action="sh_patient_action_view">
+
+        </menuitem>
+        <menuitem id="sh_doctor_config_action" name="Doctor" sequence="4"
+            action="sh_doctor_action_view">
+
+        </menuitem>
+
+        <menuitem id="sh_clinic_config_action" name="Configuration" sequence="5">
+
+            <menuitem id="sh_clinic_submenu_action_1" name="Mental Health Problem"
+                action="sh_mental_health_problem_action_view"></menuitem>
+
+            <menuitem id="sh_clinic_submenu_action_2" name="Allergies"
+                action="sh_allergies_action_view"></menuitem>
+
+            <menuitem id="sh_clinic_submenu_action_3" name="Chronic Condition"
+                action="sh_chronic_condition_action_view"></menuitem>
+
+            <menuitem id="sh_clinic_submenu_action_4" name="Disease Category"
+                action="sh_disease_category_action_view"></menuitem>
+
+            <menuitem id="sh_clinic_submenu_action_5" name="Disease"
+                action="sh_disease_action_view"></menuitem>
+
+            <menuitem id="sh_clinic_submenu_action_6" name="LifeStyle Fector"
+                action="sh_life_style_fector_action_view"></menuitem>
+
+            <menuitem id="sh_clinic_submenu_action_7" name="Medicine Type"
+                action="sh_medicine_type_action_view"></menuitem>
+
+            <menuitem id="sh_clinic_submenu_action_8" name="Medicine"
+                action="sh_medicine_action_view"></menuitem>
+
+            <menuitem id="sh_clinic_submenu_action_9" name="Symptoms"
+                action="sh_symptom_action_view"></menuitem>
+        </menuitem>
+    </menuitem>
+</odoo>

@@ -1,0 +1,41 @@
+<odoo>
+    <record id="sh_life_style_fector_list_view" model="ir.ui.view">
+        <field name="name">LifeStyle Fector</field>
+        <field name="model">sh.life.style.fector</field>
+        <field name="arch" type="xml">
+            <list string="LifeStyle Fector">
+                <field name="name"></field>
+            </list>
+        </field>
+    </record>
+
+    <record id="sh_life_style_fector_form_view" model="ir.ui.view">
+        <field name="name">LifeStyle Fector</field>
+        <field name="model">sh.life.style.fector</field>
+        <field name="arch" type="xml">
+            <form string="LifeStyle Fector">
+                <sheet>
+                    <group>
+                        <field name="name"></field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <record id="sh_life_style_fector_search_view" model="ir.ui.view">
+        <field name="name">Search Lift Sytle Fector</field>
+        <field name="model">sh.life.style.fector</field>
+        <field name="arch" type="xml">
+            <search string="Search Life Style Fector">
+                <field name="name"></field>
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_life_style_fector_action_view" model="ir.actions.act_window">
+        <field name="name">LifeStyle Fector</field>
+        <field name="res_model">sh.life.style.fector</field>
+        <field name="view_mode">list,form,search</field>
+    </record>
+</odoo>

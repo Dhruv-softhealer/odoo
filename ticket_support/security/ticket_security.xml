@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <data noupdate="0"> 
+
+        <record id="ticket_security_category" model="ir.module.category">
+            <field name="name">Ticket Support</field>
+            <field name="description">This Is For Ticket Support</field>
+            <field name="sequence">1</field>
+        </record>
+        
+        <record id="ticket_developer_group" model="res.groups">
+            <field name="name">Developer</field>
+            <field name="category_id" ref="ticket_support.ticket_security_category"/>
+            <field name="implied_ids" eval="[(4,ref('base.group_user'))]" />
+            <field name="comment">This Access Right For Developer</field>
+        </record>
+
+        <record id="ticket_sl_group" model="res.groups">
+            <field name="name">Support Leader</field>
+            <field name="category_id" ref="ticket_support.ticket_security_category"/>
+            <field name="implied_ids" eval="[(4,ref('base.group_user'))]" />
+            <field name="comment">This Access Right For support leader</field>
+        </record>
+
+         <record id="developer_rule" model="ir.rule">
+            <field name="name">dev record rule</field>
+            <field name="model_id" ref="model_support_ticket"/>
+            <field name="groups" eval="[(4,ref('ticket_support.ticket_developer_group'))]"/>
+            <field name="domain_force">[('create_uid', '=', user.id)]</field>
+        </record>
+
+        <record id="sl_rule" model="ir.rule">
+            <field name="name">sl record rule</field>
+            <field name="model_id" ref="model_support_ticket"/>
+            <field name="groups" eval="[(4,ref('ticket_support.ticket_sl_group'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+
+    </data>
+</odoo>

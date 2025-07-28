@@ -1,0 +1,41 @@
+<odoo>
+    <data>
+
+       <record id="demo_user_1" model="res.users">
+            <field name="name">John Doe</field>
+            <field name="login">john.doe@example.com</field>
+        </record>
+
+        <record id="demo_user_2" model="res.users">
+            <field name="name">Jane Smith</field>
+            <field name="login">jane.smith@example.com</field>
+        </record>
+
+        <record id="demo_customer_1" model="res.partner">
+            <field name="name">ACME Corporation</field>
+        </record>
+
+        <record id="demo_customer_2" model="res.partner">
+            <field name="name">Tech Solutions Ltd.</field>
+        </record>
+
+         <record id="demo_ticket_1" model="support.ticket">
+            <field name="name">TICKET-001</field>
+            <field name="priority">1</field>
+            <field name="stage">new</field>
+            <field name="developer" ref="demo_user_1"/>
+            <field name="support_leader" ref="demo_user_2"/>
+            <field name="partner_id" ref="demo_customer_1"/>
+        </record>
+
+        <record id="demo_ticket_2" model="support.ticket">
+            <field name="name">TICKET-002</field>
+            <field name="stage">inprogress</field>
+            <field name="developer" ref="demo_user_2"/>
+            <field name="support_leader" ref="demo_user_1"/>
+            <field name="partner_id" ref="demo_customer_2"/>
+        </record>
+
+      </data>  
+
+</odoo>

@@ -1,0 +1,45 @@
+<odoo>
+    <record id="sh_disease_category_list_view" model="ir.ui.view">
+        <field name="name">Disease Category</field>
+        <field name="model">sh.disease.category</field>
+        <field name="arch" type="xml">
+            <list string="Disease Category">
+                    <field name="name"></field>
+                    <field name="description"></field>
+            </list>
+        </field>
+    </record>
+
+    <record id="sh_disease_category_form_view" model="ir.ui.view">
+        <field name="name">Disease Category</field>
+        <field name="model">sh.disease.category</field>
+        <field name="arch" type="xml">
+            <form string="Disease Category">
+                <sheet>
+                    <group>
+                        <field name="name"></field>
+                        <field name="description"></field>
+                    </group>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <record id="sh_disease_category_search_view" model="ir.ui.view">
+        <field name="name">Search Disease Category</field>
+        <field name="model">sh.disease.category</field>
+        <field name="arch" type="xml">
+            <search string="Search Disease Category">
+                <field name="name"></field>
+                <field name="description"></field>
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_disease_category_action_view" model="ir.actions.act_window">
+        <field name="name">Disease Category</field>
+        <field name="res_model">sh.disease.category</field>
+        <field name="view_mode">list,form,search</field>
+    </record>
+</odoo>

@@ -1,0 +1,41 @@
+<odoo>
+    <record id="sh_symptom_list_view" model="ir.ui.view">
+        <field name="name">Symptoms</field>
+        <field name="model">sh.symptom</field>
+        <field name="arch" type="xml">
+            <list string="Symptoms">
+                <field name="name"></field>
+            </list>
+        </field>
+    </record>
+
+    <record id="sh_symptom_form_view" model="ir.ui.view">
+        <field name="name">Symptoms</field>
+        <field name="model">sh.symptom</field>
+        <field name="arch" type="xml">
+            <form string="Symptoms">
+                <sheet>
+                    <group>
+                        <field name="name"></field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_symptoms_search_view" model="ir.ui.view">
+        <field name="name">Search Symptoms</field>
+        <field name="model">sh.symptom</field>
+        <field name="arch" type="xml">
+            <search string="Search Symptoms">
+                <field name="name"></field>
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_symptom_action_view" model="ir.actions.act_window">
+        <field name="name">Symptoms</field>
+        <field name="res_model">sh.symptom</field>
+        <field name="view_mode">list,form,search</field>
+    </record>
+</odoo>

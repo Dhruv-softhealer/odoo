@@ -1,0 +1,45 @@
+<odoo>
+    <record id="sh_medicine_type_list_view" model="ir.ui.view">
+        <field name="name">Medicine Type</field>
+        <field name="model">sh.medicine.type</field>
+        <field name="arch" type="xml">
+            <list string="Medicine Type">
+                <field name="name"></field>
+                <field name="description"></field>
+            </list>
+        </field>
+    </record>
+
+    <record id="sh_medicine_type_form_view" model="ir.ui.view">
+        <field name="name">Medicine Type</field>
+        <field name="model">sh.medicine.type</field>
+        <field name="arch" type="xml">
+            <form string="Medicine Type">
+                <sheet>
+                    <group>
+                        <field name="name"></field>
+                        <field name="description"></field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_medicine_type_search_view" model="ir.ui.view">
+        <field name="name">Search Medicine Type</field>
+        <field name="model">sh.medicine.type</field>
+        <field name="arch" type="xml">
+            <search string="Search Medicine Type">
+                <field name="name"></field>
+                <field name="description"></field>
+            </search>
+        </field>
+    </record>
+
+
+    <record id="sh_medicine_type_action_view" model="ir.actions.act_window">
+        <field name="name">Medicine Type</field>
+        <field name="res_model">sh.medicine.type</field>
+        <field name="view_mode">list,form,search</field>
+    </record>
+</odoo>

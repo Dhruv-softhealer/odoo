@@ -1,0 +1,3 @@
+# -*- coding: utf-8 -*-
+
+from . import sh_allergies, sh_chronic_condition, sh_disease, sh_disease_category, sh_life_style_factor, sh_medicine_type, sh_mental_health_problem, sh_symptom, res_partner, hr_employee, product_template, hr_job, sh_medicine, hr_department, resource_calendar, sh_slots, sh_appointment, hr_contract, sh_disease_details, sh_prescription_medication, sh_slot_schedule, res_config_settings

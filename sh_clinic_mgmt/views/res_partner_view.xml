@@ -1,0 +1,48 @@
+<odoo>
+    <record id="sh_res_partner_view" model="ir.ui.view">
+        <field name="name">Partner View</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='vat']" position="after">
+                <field name="sh_gender"></field>
+                <field name="sh_birth_date"></field>
+                <field name="sh_age"></field>
+                <field name="sh_blood_group"></field>
+            </xpath>
+
+            <xpath expr="//page[@name='internal_notes']" position="after">
+                <page name="sh_medical_details" string="Medical Details">
+                    <group>
+                        <group>
+                            <field name="sh_dietary_preferences" />
+                            <field name="sh_life_style_fector_ids" widget="many2many_tags" />
+                            <field name="sh_mental_health_problem_ids" widget="many2many_tags" />
+                            <field name="sh_mobility_status" />
+                        </group>
+                        <group>
+                            <field name="sh_allergy_ids" widget="many2many_tags" />
+                            <field name="sh_allergies_description" />
+                            <field name="sh_cronic_condition_ids" widget="many2many_tags" />
+                            <field name="sh_mobility_status" />
+                            <field name="sh_report_name" invisible="1"/>
+                            <field name="sh_report" filename="sh_report_name"/>
+                        </group>
+                    </group>
+
+                </page>
+                <page name="visit" string="Visit">
+                    <group>
+                        <field name="sh_last_visit_date" />
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+    <record id="sh_patient_action_view" model="ir.actions.act_window">
+        <field name="name">Patient</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record>
+</odoo>

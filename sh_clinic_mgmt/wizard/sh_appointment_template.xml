@@ -1,0 +1,40 @@
+<odoo>
+  <template id="appointment_summary_template">
+    <t t-call="web.html_container">
+      <div class="page" style="display: table; width: 100%; height: 100%; text-align: center; font-family: Arial, sans-serif;">
+
+        <div style="display: table-cell; vertical-align: middle;">
+
+          <h2 style="margin-bottom: 20px;">Daily Appointment Summary</h2>
+
+          <p style="margin-bottom: 30px;">
+            <strong>Date Range:</strong> <t t-esc="data.get('from_date')"/> to <t t-esc="data.get('to_date')"/>
+            <t t-if="data.get('doctor_id')">
+              <br/><strong>Doctor ID:</strong> <t t-esc="data.get('doctor_id')"/>
+            </t>
+          </p>
+          <table style="margin: 0 auto; border-collapse: collapse; width: 90%; font-size: 14px;">
+            <thead style="background-color: #f2f2f2;">
+              <tr>
+                <th style="border: 1px solid #000; padding: 8px;">Date</th>
+                <th style="border: 1px solid #000; padding: 8px;">Total</th>
+                <th style="border: 1px solid #000; padding: 8px;">Completed</th>
+                <th style="border: 1px solid #000; padding: 8px;">Canceled</th>
+              </tr>
+            </thead>
+            <tbody>
+              <t t-foreach="docs" t-as="day">
+                <tr>
+                  <td style="border: 1px solid #000; padding: 8px;"><t t-esc="day['date']"/></td>
+                  <td style="border: 1px solid #000; padding: 8px;"><t t-esc="day['total']"/></td>
+                  <td style="border: 1px solid #000; padding: 8px;"><t t-esc="day['completed']"/></td>
+                  <td style="border: 1px solid #000; padding: 8px;"><t t-esc="day['canceled']"/></td>
+                </tr>
+              </t>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </t>
+  </template>
+</odoo>

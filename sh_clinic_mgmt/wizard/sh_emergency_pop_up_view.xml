@@ -1,0 +1,26 @@
+<odoo>
+    <record id="sh_emergency_pop_up_form_view" model="ir.ui.view">
+        <field name="name">Appointment</field>
+        <field name="model">sh.emergency.case.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Emergency">
+                <header>
+                    <h3>Emergency Pop-up!!!</h3>
+                </header>
+                <sheet>
+                    <field name="sh_message" readonly="1"/>
+                </sheet>
+                <footer>
+                    <button name="action_confirm" string="Confirm" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    
+    <record id="sh_emergency_pop_up_action_view" model="ir.actions.act_window">
+        <field name="name">Emergency</field>
+        <field name="res_model">sh.emergency.case.wizard</field>
+        <field name="view_mode">form</field>
+    </record>
+</odoo>

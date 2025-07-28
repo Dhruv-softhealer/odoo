@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_support_ticket,support.ticket,model_support_ticket,ticket_support.ticket_developer_group,1,1,1,1
+access_support_ticket,support.ticket,model_support_ticket,ticket_support.ticket_sl_group,1,1,1,1
+access_maas_action,mass.action,model_mass_action,base.group_user,1,1,1,1

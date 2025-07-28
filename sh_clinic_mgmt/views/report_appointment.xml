@@ -1,0 +1,84 @@
+<odoo>
+    <template id="report_appointment">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <div class="page ml-3">
+                    <div style="text-align:center;">
+                        <img src="/sh_clinic_mgmt/static/src/img/images.jpeg" style="height: 170px; width:170px;" />
+                    </div>
+
+                    <h3 style="color:#1A3C88;">Appointment<br />
+                        <span style="color:#1A3C88;">#<t
+                                t-esc="doc.name" /></span>
+                    </h3>
+
+                    <p>
+                        <strong>Patient Name:</strong>
+                        <t t-esc="doc.sh_patient_id.name" />
+                    </p>
+
+                    <table style="width:100%; margin-top: 20px;">
+                        <tr>
+                            <td>
+                                <strong style="color:olive;">Appointment Date</strong>
+                                <br />
+                                <t t-esc="doc.sh_date" />
+                            </td>
+                            <td style="text-align:right;">
+                                <strong style="color:olive;">Doctor</strong>
+                                <br />
+                                <t t-esc="doc.sh_doctor_id.name" />
+                            </td>
+                        </tr>
+                    </table>
+
+                    <br />
+
+                    <table style="width:100%; border-collapse: collapse;" border="1">
+                        <thead>
+                            <tr style="background-color: #F3F3F3;">
+                                <th>MEDICINE NAME</th>
+                                <th>DAYS</th>
+                                <th>QUANTITY</th>
+                                <th>MORNING</th>
+                                <th>AFTER NOON</th>
+                                <th>NIGHT</th>
+                                <th>LATE NIGHT</th>
+                                <th>INSTRUCTIONS</th>
+                                <th>Advice</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <t t-esc="doc.sh_prescription_line.sh_medicine_id.name" />
+                                </td>
+                                <td>5</td> <!-- You can replace with a dynamic field if available -->
+                                <td>Half</td> <!-- Same as above -->
+                                <td>
+                                    <t t-if="doc.sh_prescription_line.sh_morning">✔</t>
+                                </td>
+                                <td>
+                                    <t t-if="doc.sh_prescription_line.sh_afternoon">✔</t>
+                                </td>
+                                <td>
+                                    <t t-if="doc.sh_prescription_line.sh_night">✔</t>
+                                </td>
+                                <td>
+                                    <t t-if="doc.sh_prescription_line.sh_late_night">✔</t>
+                                </td>
+                                <td>
+                                    <t t-if="doc.sh_prescription_line.sh_instruction == 'after_meal'">After Meal</t>
+                                    <t t-if="doc.sh_prescription_line.sh_instruction == 'before_meal'">Before Meal</t>
+                                </td>
+                                <td>
+                                    <t t-raw="doc.sh_prescription_line.sh_advice" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

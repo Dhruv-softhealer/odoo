@@ -1,0 +1,100 @@
+<odoo>
+    <record id="sh_slots_list_view" model="ir.ui.view">
+        <field name="name">Slots</field>
+        <field name="model">sh.slots</field>
+        <field name="arch" type="xml">
+            <list string="Slots">
+                <field name="name"></field>
+                <field name="doctor_id"></field>
+                <field name="sh_slot_time"></field>
+                <field name="sh_start_date"></field>
+                <field name="sh_end_date"></field>
+            </list>
+        </field>
+    </record>
+
+    <record id="sh_slots_form_view" model="ir.ui.view">
+        <field name="name">Slots</field>
+        <field name="model">sh.slots</field>
+        <field name="arch" type="xml">
+            <form string="Slots">
+                <header>
+                    <button name="publish_appointment" string="Publish" type="object" class="oe_highlight" />
+                    <button name="generate_slot" string="Generate Slot" type="object" class="oe_highlight" />
+                    <field name="sh_state" widget="statusbar"></field>
+                </header>
+                <sheet>
+                    <field name="name"></field>
+                    <group>
+                        <group>
+                            <field name="doctor_id"></field>
+                            <field name="sh_slot_time" widget="float_time"/>
+                            <field name="sh_pre_booking" widget="float_time"></field>
+                            <field name="sh_start_date"></field>
+                            <field name="sh_end_date"></field>
+                            <field name="sh_cancel_time" widget="float_time"></field>
+                        </group>
+                        <group>
+                            <field name="sh_allowed_patients"></field>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Schedule">
+                            <field name="sh_schedule_line">
+                                <list editable="bottom">
+                                    <field name="name"></field>
+                                    <field name="sh_date"></field>
+                                    <field name="sh_appointment_line" widget="many2many_tags"></field>
+                                    <field name="sh_start_time" widget="float_time"></field>
+                                    <field name="sh_end_time" widget="float_time"></field>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <!-- Chatter -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_slots_view_search" model="ir.ui.view">
+        <field name="name">sh.slots.search</field>
+        <field name="model">sh.slots</field>
+        <field name="arch" type="xml">
+            <search string="Search Slots">
+                <!-- Basic Search -->
+                <field name="name" string="Slot Number" />
+                <field name="doctor_id" string="Doctor Name" />
+
+                <!-- Filters -->
+                <filter string="Published" name="published" domain="[('sh_state', '=', 'published')]" />
+                <filter string="Booked" name="booked" domain="[('sh_state', '=', 'booked')]"/>
+                <filter string="Draft" name="draft" domain="[('sh_state', '=', 'draft')]"/>
+                <separator/>
+
+                <filter string="Allowed Patients (&lt;=3)" name="allowed_patients_high" domain="[('sh_allowed_patients', '&lt;=', 3)]"/>
+                <separator/>
+
+                <separator/>
+
+                <!-- Group By -->
+                <group expand="0" string="Group By">
+                    <filter string="Doctor" name="group_by_doctor" context="{'group_by': 'doctor_id'}"/>
+                    <filter string="State" name="group_by_state" context="{'group_by': 'sh_state'}"/>
+                    <filter string="Start Date" name="group_by_start_date" context="{'group_by': 'sh_start_date'}"/>
+                    <filter string="End Date" name="group_by_end_date" context="{'group_by': 'sh_end_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+
+    <record id="sh_slots_action_view" model="ir.actions.act_window">
+        <field name="name">Slots</field>
+        <field name="res_model">sh.slots</field>
+        <field name="view_mode">list,form,search</field>
+    </record>
+
+
+</odoo>
