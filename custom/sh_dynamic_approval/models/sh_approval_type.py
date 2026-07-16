@@ -191,7 +191,9 @@ class ShApprovalType(models.Model):
                 ('model_id', '=', approval_type.model_id.id),
             ], limit=1)
             code = (
-                "env['sh.approval.engine'].action_submit_record_for_manual_approval(records)\n"
+                "if records:\n"
+                "    env['sh.approval.engine'].action_submit_record_for_manual_approval(records)\n"
+                "    action = {'type': 'ir.actions.client', 'tag': 'reload'}\n"
             )
             action_vals = {
                 'name': action_name,

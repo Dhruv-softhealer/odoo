@@ -39,7 +39,7 @@
                             <field name="trigger_event"/>
                             <field name="allow_self_approval"/>
                             <field name="resubmission_mode"/>
-                            <field name="update_field_ids" widget="many2many_tags"/>
+                            <field name="update_field_ids" widget="many2many_tags" invisible="trigger_event in ('create', 'manual')" required="trigger_event in ('write', 'both')"/>
                         </group>
                     </group>
                     <group>
