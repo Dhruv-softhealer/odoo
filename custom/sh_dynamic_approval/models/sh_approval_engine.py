@@ -257,6 +257,17 @@ class ShApprovalEngine(models.AbstractModel):
         self._prepare_request_lines(request)
         request.sudo()._log_event('triggered', _('Domain matched. Rule: %s') % approval_type.name)
         request.sudo().action_submit()
+        if hasattr(self.env['bus.bus'], '_sendone'):
+            self.env['bus.bus'].sudo()._sendone(
+                self.env.user.partner_id,
+                'simple_notification',
+                {
+                    'title': _('Approval Triggered'),
+                    'message': _('The record %s has been submitted for approval.', record.display_name),
+                    'sticky': False,
+                    'type': 'info',
+                }
+            )
         return request
 
     @api.model
