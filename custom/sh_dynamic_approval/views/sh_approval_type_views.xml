@@ -61,22 +61,22 @@
                                 <list>
                                     <field name="sequence" widget="handle"/>
                                     <field name="name"/>
-                                    <field name="company_ids" widget="many2many_tags" groups="base.group_multi_company"/>
+                                    <field name="company_ids" widget="many2many_tags" groups="base.group_multi_company" readonly="False"/>
                                     <field name="approval_method"/>
                                     <field name="group_id" invisible="approval_method != 'group'" options="{'no_create': False, 'no_open': False, 'no_create_edit': False}"/>
-                                    <field name="job_id" invisible="approval_method != 'job'" check_company="0" domain="['|', ('company_id', '=', False), ('company_id', '!=', False)]"/>
-                                    <field name="alternative_user_id" check_company="0" domain="[('share', '=', False)]"/>
+                                    <field name="job_id" invisible="approval_method != 'job'" domain="['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"/>
+                                    <field name="alternative_user_id" domain="[('share', '=', False), '|', ('company_ids', 'in', company_ids), ('company_id', '=', False)]"/>
                                     <field name="escalation_timeout"/>
                                 </list>
                                 <form>
                                     <group>
                                         <field name="sequence"/>
                                         <field name="name"/>
-                                        <field name="company_ids" widget="many2many_tags" groups="base.group_multi_company"/>
+                                        <field name="company_ids" widget="many2many_tags" groups="base.group_multi_company" readonly="False"/>
                                         <field name="approval_method"/>
                                         <field name="group_id" invisible="approval_method != 'group'" options="{'no_create': False, 'no_open': False, 'no_create_edit': False}"/>
-                                        <field name="job_id" invisible="approval_method != 'job'" check_company="0" domain="['|', ('company_id', '=', False), ('company_id', '!=', False)]"/>
-                                        <field name="alternative_user_id" check_company="0" domain="[('share', '=', False)]"/>
+                                        <field name="job_id" invisible="approval_method != 'job'" domain="['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"/>
+                                        <field name="alternative_user_id" domain="[('share', '=', False), '|', ('company_ids', 'in', company_ids), ('company_id', '=', False)]"/>
                                         <field name="escalation_timeout"/>
                                     </group>
                                     <group invisible="approval_method != 'python'">
