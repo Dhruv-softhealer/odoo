@@ -13,3 +13,8 @@ access_sh_approval_refuse_wizard_approver,sh.approval.refuse.wizard.approver,mod
 access_sh_approval_request_manager_readonly,sh.approval.request.manager.readonly,model_sh_approval_request,sh_dynamic_approval.group_sh_dynamic_approval_manager_readonly,1,0,0,0
 access_sh_approval_line_manager_readonly,sh.approval.line.manager.readonly,model_sh_approval_line,sh_dynamic_approval.group_sh_dynamic_approval_manager_readonly,1,0,0,0
 access_sh_approval_log_manager_readonly,sh.approval.log.manager.readonly,model_sh_approval_log,sh_dynamic_approval.group_sh_dynamic_approval_manager_readonly,1,0,0,0
+access_sh_approval_python_template_readonly,sh.approval.python.template,model_sh_approval_python_template,base.group_user,1,0,0,0
+access_sh_approval_request_employee,sh.approval.request.employee,model_sh_approval_request,base.group_user,1,0,0,0
+access_sh_approval_line_employee,sh.approval.line.employee,model_sh_approval_line,base.group_user,1,0,0,0
+access_sh_approval_log_employee,sh.approval.log.employee,model_sh_approval_log,base.group_user,1,0,0,0
+access_sh_approval_refuse_wizard_employee,sh.approval.refuse.wizard.employee,model_sh_approval_refuse_wizard,base.group_user,1,1,1,1

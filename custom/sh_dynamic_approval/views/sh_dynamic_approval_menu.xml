@@ -12,6 +12,6 @@
     <menuitem id="menu_sh_dynamic_approval_configuration" name="Configuration" parent="menu_sh_dynamic_approval_root" sequence="90" groups="sh_dynamic_approval.group_sh_dynamic_approval_authorized_user"/>
     <menuitem id="menu_sh_dynamic_approval_type" name="Approval Types" parent="menu_sh_dynamic_approval_configuration" action="action_sh_approval_type" sequence="10"/>
 
-    <menuitem id="menu_settings_dynamic_approval" name="Dynamic Approval" parent="base.menu_administration" sequence="100" groups="base.group_erp_manager"/>
+    <menuitem id="menu_settings_dynamic_approval" name="Dynamic Approval" parent="base.menu_administration" sequence="100" groups="sh_dynamic_approval.group_sh_dynamic_approval_authorized_user"/>
     <menuitem id="menu_settings_approval_type" name="Approval Types" parent="menu_settings_dynamic_approval" action="action_sh_approval_type" sequence="10"/>
 </odoo>

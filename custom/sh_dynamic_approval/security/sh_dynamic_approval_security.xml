@@ -51,7 +51,7 @@
         <field name="name">Approval Request user scope</field>
         <field name="model_id" ref="model_sh_approval_request"/>
         <field name="domain_force">['|', '|', ('requester_id', '=', user.id), ('line_ids.approver_ids', 'in', [user.id]), ('line_ids.alternative_user_id', '=', user.id)]</field>
-        <field name="groups" eval="[(4, ref('group_sh_dynamic_approval_approver'))]"/>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
     </record>
 
     <record id="rule_sh_approval_request_manager_department" model="ir.rule">
@@ -72,7 +72,7 @@
         <field name="name">Approval Line user scope</field>
         <field name="model_id" ref="model_sh_approval_line"/>
         <field name="domain_force">['|', '|', ('request_id.requester_id', '=', user.id), ('approver_ids', 'in', [user.id]), ('alternative_user_id', '=', user.id)]</field>
-        <field name="groups" eval="[(4, ref('group_sh_dynamic_approval_approver'))]"/>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
     </record>
 
     <record id="rule_sh_approval_line_manager_department" model="ir.rule">
@@ -93,7 +93,7 @@
         <field name="name">Approval Log user scope</field>
         <field name="model_id" ref="model_sh_approval_log"/>
         <field name="domain_force">['|', '|', ('request_id.requester_id', '=', user.id), ('request_id.line_ids.approver_ids', 'in', [user.id]), ('request_id.line_ids.alternative_user_id', '=', user.id)]</field>
-        <field name="groups" eval="[(4, ref('group_sh_dynamic_approval_approver'))]"/>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
     </record>
 
     <record id="rule_sh_approval_log_manager_department" model="ir.rule">
