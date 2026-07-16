@@ -219,14 +219,44 @@ class ShApprovalRequest(models.Model):
         return pickle.loads(base64.b64decode(payload))
 
     def _format_staged_write_summary(self, vals):
-        """Build a readable summary of proposed changed fields."""
+        """Build a readable summary of proposed changed fields with old and new values."""
         self.ensure_one()
         target = self._get_target_record()
         labels = []
-        for field_name in vals:
+        for field_name, new_val in vals.items():
             field = target._fields.get(field_name) if target else False
             label = field.string if field else field_name
-            labels.append('%s (%s)' % (label, field_name))
+            
+            if not target:
+                labels.append('%s (%s): -> %s' % (label, field_name, new_val))
+                continue
+                
+            old_val = getattr(target, field_name, False)
+            old_display = str(old_val)
+            new_display = str(new_val)
+            
+            if field:
+                if field.type == 'many2one':
+                    old_display = old_val.display_name if old_val else 'False'
+                    if new_val:
+                        new_record = self.env[field.comodel_name].sudo().browse(new_val)
+                        new_display = new_record.display_name if new_record.exists() else str(new_val)
+                    else:
+                        new_display = 'False'
+                elif field.type == 'selection':
+                    # Use sudo() in case the selection requires access rights
+                    selection_dict = dict(field.selection if isinstance(field.selection, list) else field.selection(target.sudo()))
+                    old_display = selection_dict.get(old_val, str(old_val))
+                    new_display = selection_dict.get(new_val, str(new_val))
+                elif field.type in ('many2many', 'one2many'):
+                    old_display = '%s records' % len(old_val) if old_val else '0 records'
+                    new_display = 'Update Payload: %s' % str(new_val)
+                elif field.type == 'binary':
+                    old_display = 'Binary Data' if old_val else 'False'
+                    new_display = 'Binary Data' if new_val else 'False'
+                    
+            labels.append('%s (%s): %s -> %s' % (label, field_name, old_display, new_display))
+            
         return '\n'.join(labels)
 
     def _apply_staged_write_values(self):
