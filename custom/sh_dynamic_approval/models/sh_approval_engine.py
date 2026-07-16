@@ -263,6 +263,8 @@ class ShApprovalEngine(models.AbstractModel):
     def _prepare_request_lines(self, request):
         """Create pending approval lines for all configured levels."""
         for level in request.approval_type_id.level_ids.sorted('sequence'):
+            if level.company_ids and request.company_id not in level.company_ids:
+                continue
             approvers = self._resolve_approvers(level, request._get_target_record(), request.requester_id)
             alternative_user = level.alternative_user_id
             if not approvers and alternative_user:
