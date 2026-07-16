@@ -285,9 +285,9 @@ class ShApprovalEngine(models.AbstractModel):
         """Resolve active approver users for one approval level."""
         users = self.env['res.users']
         if level.approval_method == 'group':
-            users = level.group_id.user_ids
+            users = level.group_id.sudo().user_ids
         elif level.approval_method == 'job':
-            employees = self.env['hr.employee'].search([('job_id', '=', level.job_id.id), ('active', '=', True)])
+            employees = self.env['hr.employee'].sudo().search([('job_id', '=', level.job_id.id), ('active', '=', True)])
             users = employees.mapped('user_id') if employees else self.env['res.users']
         elif level.approval_method == 'python':
             localdict = {'record': record, 'env': self.env, 'user': requester}
