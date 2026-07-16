@@ -129,7 +129,7 @@ class TestShDynamicApproval(TransactionCase):
         ], limit=1)
 
         self.assertTrue(action)
-        self.assertEqual(action.binding_view_types, 'form')
+        self.assertEqual(action.binding_view_types, 'list,form')
 
     def test_resubmission_records_modification_summary(self):
         """Resubmission should capture field-level changes in the audit summary."""
