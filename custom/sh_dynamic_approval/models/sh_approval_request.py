@@ -664,24 +664,25 @@ class ShApprovalRequest(models.Model):
         self._notify_pending_lines()
 
     def _notify_pending_lines(self, template_event='request'):
-        """Send approval request emails to the current active pending line."""
+        """Send approval request emails to all active pending lines."""
         for request in self:
-            pending_line = request.sudo().line_ids.filtered(lambda item: item.state in ('pending', 'escalated')).sorted('sequence')[:1]
-            if pending_line and not pending_line.notification_date:
-                partners = pending_line._notification_partner_ids()
-                if not partners:
-                    continue
-                pending_line.sudo().write({'notification_date': fields.Datetime.now()})
-                target = request._get_target_record()
-                record_to_activity = target if target and hasattr(target, 'activity_unlink') else request
-                record_to_activity.activity_unlink(['mail.mail_activity_data_todo'])
-                request._notify_template_for_partners(
-                    request._get_email_template(template_event),
-                    partners,
-                    line=pending_line,
-                    action='view',
-                )
-                request._log_event('email_sent', _('Approval request email sent.'), level=pending_line.level_id)
+            pending_lines = request.sudo().line_ids.filtered(lambda item: item.state in ('pending', 'escalated')).sorted('sequence')
+            for pending_line in pending_lines:
+                if pending_line and not pending_line.notification_date:
+                    partners = pending_line._notification_partner_ids()
+                    if not partners:
+                        continue
+                    pending_line.sudo().write({'notification_date': fields.Datetime.now()})
+                    target = request._get_target_record()
+                    record_to_activity = target if target and hasattr(target, 'activity_unlink') else request
+                    record_to_activity.activity_unlink(['mail.mail_activity_data_todo'])
+                    request._notify_template_for_partners(
+                        request._get_email_template(template_event),
+                        partners,
+                        line=pending_line,
+                        action='view',
+                    )
+                    request._log_event('email_sent', _('Approval request email sent.'), level=pending_line.level_id)
 
     def _get_template_record(self, template_or_xmlid, fallback_xmlid=None):
         """Resolve either a mail.template record or fallback XML id."""
