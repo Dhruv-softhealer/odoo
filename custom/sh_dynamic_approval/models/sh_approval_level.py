@@ -14,7 +14,7 @@ class ShApprovalLevel(models.Model):
     _order = 'sequence, id'
 
     approval_type_id = fields.Many2one('sh.approval.type', required=True, ondelete='cascade', index=True)
-    company_id = fields.Many2one(related='approval_type_id.company_id', store=True, index=True)
+    company_ids = fields.Many2many('res.company', string='Company Filter', help='If specified, this level will only apply to records belonging to these companies.')
     sequence = fields.Integer(required=True, default=10, index=True)
     name = fields.Char(required=True)
     approval_method = fields.Selection(
