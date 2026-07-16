@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mail_template_sh_approval_request_created" model="mail.template">
+        <field name="name">Dynamic Approval: Action Required</field>
+        <field name="model_id" ref="model_sh_approval_request"/>
+        <field name="subject">Approval Required: {{ object.record_name }}</field>
+        <field name="email_from">{{ user.email_formatted }}</field>
+        <field name="body_html" type="html">
+            <div>
+                <p>Dear Approver,</p>
+                <p>The record <strong><t t-out="object.record_name"/></strong> requires your approval.</p>
+                <br/>
+                <p style="margin:0;">Record: <a t-att-href="object._get_action_url('view')"><t t-out="object.record_name"/></a></p>
+                <p style="margin:0;">Requested by: <t t-out="object.requester_id.name"/> on <t t-out="object.create_date.strftime('%d-%b-%Y')"/></p>
+                <br/>
+                <p style="margin-bottom: 5px;"><strong>Approval Status:</strong></p>
+                <ul style="list-style-type: none; padding-left: 0; margin-top: 0;">
+                    <t t-foreach="object.line_ids.sorted('sequence')" t-as="line">
+                        <li style="margin-bottom: 3px;">
+                            <t t-out="'Level %s - %s' % (line.sequence, line.level_id.name)"/>:
+                            <t t-if="line.state == 'approved'">
+                                Approved by <t t-out="line.action_user_id.name"/> on <t t-out="line.action_date.strftime('%d-%b-%Y at %H:%M') if line.action_date else ''"/>
+                            </t>
+                            <t t-elif="line.state == 'auto_approved'">
+                                Auto-Approved by <t t-out="line.action_user_id.name"/> on <t t-out="line.action_date.strftime('%d-%b-%Y at %H:%M') if line.action_date else ''"/>
+                            </t>
+                            <t t-elif="line.id == ctx.get('sh_notification_line_id')">
+                                <strong>Pending Your Approval</strong>
+                            </t>
+                            <t t-elif="line.state in ('pending', 'escalated')">
+                                Pending
+                            </t>
+                            <t t-elif="line.state == 'refused'">
+                                Refused
+                            </t>
+                            <t t-elif="line.state == 'cancelled'">
+                                Cancelled
+                            </t>
+                        </li>
+                    </t>
+                </ul>
+                <br/>
+                <p>
+                    <a t-att-href="object._get_action_url('approve')" style="background-color: #198754; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px; margin-right: 5px;">Approve</a>
+                    <a t-att-href="object._get_action_url('refuse')" style="background-color: #dc3545; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px; margin-right: 5px;">Refuse</a>
+                    <a t-att-href="object._get_action_url('view')" style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">View Record</a>
+                </p>
+                <t t-set="active_line" t-value="object.line_ids.filtered(lambda l: l.id == ctx.get('sh_notification_line_id'))"/>
+                <t t-if="active_line and active_line.level_id.alternative_user_id and active_line.level_id.escalation_timeout">
+                    <br/>
+                    <p style="color: #6c757d; font-size: 0.9em;">
+                        If you are unable to action this, the alternative approver <strong><t t-out="active_line.level_id.alternative_user_id.name"/></strong> 
+                        will be notified after <t t-out="active_line.level_id.escalation_timeout"/> hours.
+                    </p>
+                </t>
+            </div>
+        </field>
+    </record>
+
+    <record id="mail_template_sh_approval_auto_approved" model="mail.template">
+        <field name="name">Dynamic Approval: Auto-Approved</field>
+        <field name="model_id" ref="model_sh_approval_request"/>
+        <field name="subject">Auto-Approved Level: {{ object.record_name }}</field>
+        <field name="email_from">{{ user.email_formatted }}</field>
+        <field name="body_html" type="html">
+            <div>
+                <p>An approval level was auto-approved by a senior approver.</p>
+                <p>Record: <strong><t t-out="object.record_name"/></strong></p>
+                <p>Level: <t t-out="object._notification_level_name()"/></p>
+                <p>Actioned By: <t t-out="object._notification_actor_name()"/></p>
+                <p>Note: <t t-out="object._notification_note()"/></p>
+                <p><a t-att-href="object._get_action_url('view')" style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">View Record</a></p>
+            </div>
+        </field>
+    </record>
+
+    <record id="mail_template_sh_approval_completed" model="mail.template">
+        <field name="name">Dynamic Approval: Completed</field>
+        <field name="model_id" ref="model_sh_approval_request"/>
+        <field name="subject">Approval Completed: {{ object.record_name }}</field>
+        <field name="email_from">{{ user.email_formatted }}</field>
+        <field name="body_html" type="html">
+            <div>
+                <p>The approval request for <strong><t t-out="object.record_name"/></strong> is fully approved.</p>
+                <p>Completed On: <t t-out="object.completed_date"/></p>
+                <p><a t-att-href="object._get_action_url('view')" style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">View Record</a></p>
+            </div>
+        </field>
+    </record>
+
+    <record id="mail_template_sh_approval_refused" model="mail.template">
+        <field name="name">Dynamic Approval: Refused</field>
+        <field name="model_id" ref="model_sh_approval_request"/>
+        <field name="subject">Approval Refused: {{ object.record_name }}</field>
+        <field name="email_from">{{ user.email_formatted }}</field>
+        <field name="body_html" type="html">
+            <div>
+                <p>The approval request for <strong><t t-out="object.record_name"/></strong> was refused.</p>
+                <p>Reason: <t t-out="object.last_refusal_reason"/></p>
+                <p><a t-att-href="object._get_action_url('view')" style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">View Record</a></p>
+            </div>
+        </field>
+    </record>
+
+    <record id="mail_template_sh_approval_escalated" model="mail.template">
+        <field name="name">Dynamic Approval: Escalated</field>
+        <field name="model_id" ref="model_sh_approval_request"/>
+        <field name="subject">Escalated Approval Required: {{ object.record_name }}</field>
+        <field name="email_from">{{ user.email_formatted }}</field>
+        <field name="body_html" type="html">
+            <div>
+                <p>An approval request has been escalated to you.</p>
+                <p>Record: <strong><t t-out="object.record_name"/></strong></p>
+                <p>
+                    <a t-att-href="object._get_action_url('view')" style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">View Record</a>
+                </p>
+            </div>
+        </field>
+    </record>
+
+    <record id="mail_template_sh_approval_resubmission" model="mail.template">
+        <field name="name">Dynamic Approval: Resubmission</field>
+        <field name="model_id" ref="model_sh_approval_request"/>
+        <field name="subject">Approval Resubmitted: {{ object.record_name }}</field>
+        <field name="email_from">{{ user.email_formatted }}</field>
+        <field name="body_html" type="html">
+            <div>
+                <p>The approval request for <strong><t t-out="object.record_name"/></strong> has been modified and resubmitted.</p>
+                <p>Modification Summary:</p>
+                <pre><t t-out="object._notification_modification_summary()"/></pre>
+                <p>Approval Level: <t t-out="object._notification_level_name() or object.current_level_id.name"/></p>
+                <p><a t-att-href="object._get_action_url('view')" style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">View Record</a></p>
+            </div>
+        </field>
+    </record>
+</odoo>

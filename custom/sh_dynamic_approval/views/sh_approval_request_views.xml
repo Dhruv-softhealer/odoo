@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sh_approval_request_search" model="ir.ui.view">
+        <field name="name">sh.approval.request.search</field>
+        <field name="model">sh.approval.request</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="record_name"/>
+                <field name="requester_id"/>
+                <field name="approval_type_id"/>
+                <filter name="my_pending" string="My Pending Approvals" domain="[('state','=','pending'), '|', ('line_ids.approver_ids','in',[uid]), ('line_ids.alternative_user_id','=',uid)]"/>
+                <filter name="approved" string="Approved" domain="[('state','=','approved')]"/>
+                <filter name="refused" string="Refused" domain="[('state','=','refused')]"/>
+                <filter name="cancelled" string="Cancelled" domain="[('state','=','cancelled')]"/>
+                <group name="group_by">
+                    <filter name="group_state" string="State" context="{'group_by':'state'}"/>
+                    <filter name="group_model" string="Model" context="{'group_by':'model_id'}"/>
+                    <filter name="group_requester" string="Requester" context="{'group_by':'requester_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_sh_approval_request_list" model="ir.ui.view">
+        <field name="name">sh.approval.request.list</field>
+        <field name="model">sh.approval.request</field>
+        <field name="arch" type="xml">
+            <list duplicate="0" create="false">
+                <field name="name"/>
+                <field name="model_id"/>
+                <field name="record_name"/>
+                <field name="requester_id"/>
+                <field name="can_current_user_approve" invisible="1"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="submitted_date"/>
+                <field name="trigger_event"/>
+                <field name="current_level_id"/>
+                <field name="days_pending"/>
+                <field name="state"/>
+                <field name="can_current_user_approve" invisible="1"/>
+                <button name="action_approve" type="object" string="Approve" class="btn-primary" invisible="state != 'pending' or not can_current_user_approve"/>
+                <button name="action_open_refuse_wizard" type="object" string="Refuse" invisible="state != 'pending' or not can_current_user_approve"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sh_approval_request_form" model="ir.ui.view">
+        <field name="name">sh.approval.request.form</field>
+        <field name="model">sh.approval.request</field>
+        <field name="arch" type="xml">
+            <form duplicate="0" create="false">
+                <header>
+                    <button name="action_submit" type="object" string="Submit" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object" string="Approve" class="btn-primary" invisible="state != 'pending' or not can_current_user_approve"/>
+                    <button name="action_open_refuse_wizard" type="object" string="Refuse" invisible="state != 'pending' or not can_current_user_approve"/>
+                    <button name="action_modify" type="object" string="Modify" invisible="state != 'refused'"/>
+                    <button name="action_resubmit" type="object" string="Resubmit" invisible="state != 'draft'"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state not in ('draft', 'pending')"/>
+                    <button name="action_force_approve" type="object" string="Force Approve" groups="sh_dynamic_approval.group_sh_dynamic_approval_authorized_user" class="btn-primary" invisible="state != 'pending'"/>
+                    <button name="action_manual_escalate" type="object" string="Manual Escalate" groups="sh_dynamic_approval.group_sh_dynamic_approval_authorized_user" invisible="state != 'pending'"/>
+                    <button name="action_open_record" type="object" string="Open Record"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending,approved,refused,cancelled"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="approval_type_id"/>
+                            <field name="model_id"/>
+                            <field name="record_name"/>
+                            <field name="can_current_user_approve" invisible="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="access_token" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="requester_id"/>
+                            <field name="submitted_date"/>
+                            <field name="completed_date"/>
+                            <field name="trigger_event"/>
+                            <field name="current_level_id"/>
+                            <field name="resubmission_count"/>
+                            <field name="modification_summary" readonly="1"/>
+                        </group>
+                    </group>
+                    <group invisible="trigger_event != 'write'">
+                        <field name="staged_write_summary" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="last_refusal_reason"/>
+                    </group>
+                    <notebook>
+                        <page string="Approval Lines">
+                            <field name="line_ids" readonly="1">
+                                <list>
+                                    <field name="sequence"/>
+                                    <field name="level_id"/>
+                                    <field name="approver_display" widget="badge"/>
+                                    <field name="approver_ids" column_invisible="1"/>
+                                    <field name="alternative_user_id"/>
+                                    <field name="state"/>
+                                    <field name="action_user_id"/>
+                                    <field name="action_date"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Audit Trail">
+                            <field name="log_ids" readonly="1">
+                                <list>
+                                    <field name="create_date"/>
+                                    <field name="action"/>
+                                    <field name="actor_id"/>
+                                    <field name="level_id"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_sh_approval_refuse_wizard" model="ir.actions.act_window">
+        <field name="name">Refuse Approval</field>
+        <field name="res_model">sh.approval.refuse.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <record id="action_sh_approval_request" model="ir.actions.act_window">
+        <field name="name">All Approvals</field>
+        <field name="res_model">sh.approval.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_sh_approval_request_search"/>
+        <field name="context">{'create': False}</field>
+    </record>
+
+    <record id="view_sh_approval_refuse_wizard_form" model="ir.ui.view">
+        <field name="name">sh.approval.refuse.wizard.form</field>
+        <field name="model">sh.approval.refuse.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="request_ids" widget="many2many_tags" readonly="1"/>
+                    <field name="reason" placeholder="Enter refusal reason"/>
+                </group>
+                <footer>
+                    <button name="action_confirm_refuse" type="object" string="Refuse" class="btn-primary"/>
+                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

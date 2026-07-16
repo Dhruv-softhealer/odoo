@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_server_sh_dynamic_approval_bulk_approve" model="ir.actions.server">
+        <field name="name">Bulk Approve</field>
+        <field name="model_id" ref="model_sh_approval_request"/>
+        <field name="binding_model_id" ref="model_sh_approval_request"/>
+        <field name="binding_type">action</field>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+action = records.action_bulk_approve() if records else False
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sh_approval_type_list" model="ir.ui.view">
+        <field name="name">sh.approval.type.list</field>
+        <field name="model">sh.approval.type</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="model_id"/>
+                <field name="trigger_event"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sh_approval_type_form" model="ir.ui.view">
+        <field name="name">sh.approval.type.form</field>
+        <field name="model">sh.approval.type</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_requests" type="object" class="oe_stat_button" icon="fa-check-square-o">
+                            <field name="request_count" widget="statinfo" string="Requests"/>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="sequence"/>
+                            <field name="active" invisible="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="model_id"/>
+                            <field name="model" invisible="1"/>
+                            <field name="trigger_event"/>
+                            <field name="allow_self_approval"/>
+                            <field name="resubmission_mode"/>
+                            <field name="update_field_ids" widget="many2many_tags"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="domain_filter" widget="domain" options="{'model': 'model'}"/>
+                    </group>
+                    <notebook>
+                        <page string="Email Templates">
+                            <group>
+                                <field name="request_template_id"/>
+                                <field name="auto_approved_template_id"/>
+                                <field name="completed_template_id"/>
+                                <field name="refused_template_id"/>
+                                <field name="escalated_template_id"/>
+                                <field name="resubmission_template_id"/>
+                            </group>
+                        </page>
+                        <page string="Approval Levels">
+                            <field name="level_ids">
+                                <list>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="approval_method"/>
+                                    <field name="group_id" invisible="approval_method != 'group'" options="{'no_create': False, 'no_open': False, 'no_create_edit': False}"/>
+                                    <field name="job_id" invisible="approval_method != 'job'" check_company="0" domain="['|', ('company_id', '=', False), ('company_id', '!=', False)]"/>
+                                    <field name="alternative_user_id" check_company="0" domain="[('share', '=', False)]"/>
+                                    <field name="escalation_timeout"/>
+                                </list>
+                                <form>
+                                    <group>
+                                        <field name="sequence"/>
+                                        <field name="name"/>
+                                        <field name="approval_method"/>
+                                        <field name="group_id" invisible="approval_method != 'group'" options="{'no_create': False, 'no_open': False, 'no_create_edit': False}"/>
+                                        <field name="job_id" invisible="approval_method != 'job'" check_company="0" domain="['|', ('company_id', '=', False), ('company_id', '!=', False)]"/>
+                                        <field name="alternative_user_id" check_company="0" domain="[('share', '=', False)]"/>
+                                        <field name="escalation_timeout"/>
+                                    </group>
+                                    <group invisible="approval_method != 'python'">
+                                        <field name="python_code" placeholder="record.employee_id.parent_id.user_id"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_sh_approval_type" model="ir.actions.act_window">
+        <field name="name">Approval Types</field>
+        <field name="res_model">sh.approval.type</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
