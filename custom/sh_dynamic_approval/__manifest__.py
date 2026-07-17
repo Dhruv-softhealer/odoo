@@ -35,6 +35,7 @@ bulk approval, and multi-company isolation.
         'views/sh_approval_request_views.xml',
         'views/sh_approval_dashboard_views.xml',
         'views/sh_dynamic_approval_menu.xml',
+        'views/hr_leave_views.xml',
     ],
     'assets': {
         'web.assets_backend': [
