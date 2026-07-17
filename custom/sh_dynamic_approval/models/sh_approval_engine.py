@@ -294,11 +294,16 @@ class ShApprovalEngine(models.AbstractModel):
     @api.model
     def _resolve_approvers(self, level, record, requester):
         """Resolve active approver users for one approval level."""
+        record_company = self._record_company(record)
         users = self.env['res.users']
         if level.approval_method == 'group':
-            users = level.group_id.sudo().user_ids
+            users = level.group_id.sudo().user_ids.filtered(lambda u: not u.company_ids or record_company in u.company_ids)
         elif level.approval_method == 'job':
-            employees = self.env['hr.employee'].sudo().search([('job_id', '=', level.job_id.id), ('active', '=', True)])
+            employees = self.env['hr.employee'].sudo().search([
+                ('job_id', '=', level.job_id.id),
+                ('active', '=', True),
+                '|', ('company_id', '=', False), ('company_id', '=', record_company.id)
+            ])
             users = employees.mapped('user_id') if employees else self.env['res.users']
         elif level.approval_method == 'python':
             localdict = {'record': record, 'env': self.env, 'user': requester}
