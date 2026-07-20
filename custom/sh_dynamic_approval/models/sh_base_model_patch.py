@@ -218,12 +218,20 @@ class BaseModelExtend(models.AbstractModel):
                     })
                     header.insert(0, cancel_btn_node)
                     
-                    # Inject Manual Approval UI
+                    # Inject Dynamic Approval State UI
+                    state_field_node = etree.Element('field', name='sh_dynamic_approval_state', invisible='1')
+                    doc.insert(0, state_field_node)
+                    
+                    statusbar_node = etree.Element('field', **{
+                        'name': 'sh_dynamic_approval_state',
+                        'widget': 'statusbar',
+                        'statusbar_visible': 'draft,pending,approved,refused',
+                    })
+                    header.append(statusbar_node)
+                    
+                    # Inject Manual Approval Button
                     has_manual_rules = self.env['sh.approval.type'].sudo().search_count([('model', '=', self._name), ('trigger_event', '=', 'manual')]) > 0
                     if has_manual_rules:
-                        state_field_node = etree.Element('field', name='sh_dynamic_approval_state', invisible='1')
-                        doc.insert(0, state_field_node)
-                        
                         btn_node = etree.Element('button', **{
                             'name': 'action_sh_send_for_manual_approval',
                             'type': 'object',
@@ -232,13 +240,6 @@ class BaseModelExtend(models.AbstractModel):
                             'invisible': "sh_dynamic_approval_state in ('pending', 'approved')"
                         })
                         header.insert(0, btn_node)
-                        
-                        statusbar_node = etree.Element('field', **{
-                            'name': 'sh_dynamic_approval_state',
-                            'widget': 'statusbar',
-                            'statusbar_visible': 'draft,pending,approved,refused',
-                        })
-                        header.append(statusbar_node)
                     
                     # Insert warning banner
                     header.addnext(alert_node)
@@ -260,53 +261,8 @@ class BaseModelExtend(models.AbstractModel):
                     
         return arch, view
 
-    def _check_restricted_approval_links(self, vals):
-        """Prevent selecting or using records that are currently pending approval in relational fields."""
-        if not _approval_engine_available(self.env) or self.env.context.get('sh_skip_dynamic_approval'):
-            return
-            
-        approval_engine = self.env['sh.approval.engine']
-        
-        linked_by_model = {}
-        for field_name, value in vals.items():
-            field = self._fields.get(field_name)
-            if not field or not value:
-                continue
-                
-            if field.type == 'many2one' and isinstance(value, int):
-                linked_by_model.setdefault(field.comodel_name, set()).add(value)
-            elif field.type in ('many2many', 'one2many') and isinstance(value, list):
-                for command in value:
-                    if not isinstance(command, (list, tuple)):
-                        continue
-                    if command[0] == 4: # (4, id)
-                        linked_by_model.setdefault(field.comodel_name, set()).add(command[1])
-                    elif command[0] == 6 and len(command) > 2 and command[2]: # (6, 0, ids)
-                        linked_by_model.setdefault(field.comodel_name, set()).update(command[2])
-                        
-        if not linked_by_model:
-            return
-            
-        for comodel, ids in linked_by_model.items():
-            if not ids or comodel in approval_engine._excluded_models() or comodel not in self.env:
-                continue
-                
-            requests = self.env['sh.approval.request'].sudo().search([
-                ('res_model', '=', comodel),
-                ('res_id', 'in', list(ids)),
-                ('state', '=', 'pending')
-            ], limit=1)
-            
-            if requests:
-                record = self.env[comodel].sudo().browse(requests.res_id)
-                display_name = record.display_name if record.exists() else str(requests.res_id)
-                raise UserError(_("You cannot select or use the record '%s' because it is currently under approval.") % display_name)
-
     @api.model_create_multi
     def create(self, vals_list):
-        for vals in vals_list:
-            self._check_restricted_approval_links(vals)
-            
         records = super().create(vals_list)
         if not _approval_engine_available(self.env):
             return records
@@ -338,7 +294,6 @@ class BaseModelExtend(models.AbstractModel):
                 request.action_cancel()
 
     def write(self, vals):
-        self._check_restricted_approval_links(vals)
         changed_fields = list(vals.keys())
         if not _approval_engine_available(self.env):
             return super().write(vals)
