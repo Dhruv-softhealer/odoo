@@ -133,4 +133,17 @@
             </div>
         </field>
     </record>
+
+    <record id="mail_template_sh_approval_cancelled" model="mail.template">
+        <field name="name">Dynamic Approval: Cancelled</field>
+        <field name="model_id" ref="model_sh_approval_request"/>
+        <field name="subject">Approval Cancelled: {{ object.record_name }}</field>
+        <field name="email_from">{{ user.email_formatted }}</field>
+        <field name="body_html" type="html">
+            <div>
+                <p>The approval request for <strong><t t-out="object.record_name"/></strong> has been cancelled.</p>
+                <p><a t-att-href="object._get_action_url('view')" style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">View Record</a></p>
+            </div>
+        </field>
+    </record>
 </odoo>

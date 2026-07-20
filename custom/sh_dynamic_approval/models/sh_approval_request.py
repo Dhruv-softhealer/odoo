@@ -185,13 +185,16 @@ class ShApprovalRequest(models.Model):
             if request.state == 'pending':
                 if hasattr(target, 'sh_activation_state'):
                     vals['sh_activation_state'] = 'to_approve'
-                    vals['active'] = False
                 elif hasattr(target, 'sh_state'):
                     vals['sh_state'] = 'pending_approval'
                 elif hasattr(target, 'state'):
                     field = target._fields.get('state')
                     if field and field.type == 'selection' and 'pending' in dict(field.selection if isinstance(field.selection, list) else field.selection(target)):
                         vals['state'] = 'pending'
+                        
+                if request.trigger_event in ('create', 'manual') and hasattr(target, 'active'):
+                    vals['active'] = False
+                    
             elif request.state == 'approved':
                 if hasattr(target, 'sh_activation_state'):
                     vals['sh_activation_state'] = 'approved'
@@ -201,26 +204,35 @@ class ShApprovalRequest(models.Model):
                     field = target._fields.get('state')
                     if field and field.type == 'selection' and 'done' in dict(field.selection if isinstance(field.selection, list) else field.selection(target)):
                         vals['state'] = 'done'
+                        
+                if request.trigger_event in ('create', 'manual') and hasattr(target, 'active'):
+                    vals['active'] = True
+                    
             elif request.state == 'refused':
                 if hasattr(target, 'sh_activation_state'):
                     vals['sh_activation_state'] = 'rejected'
-                    vals['active'] = False
                 elif hasattr(target, 'sh_state'):
                     vals['sh_state'] = 'rejected'
                 elif hasattr(target, 'state'):
                     field = target._fields.get('state')
                     if field and field.type == 'selection' and 'cancel' in dict(field.selection if isinstance(field.selection, list) else field.selection(target)):
                         vals['state'] = 'cancel'
+                        
+                if request.trigger_event in ('create', 'manual') and hasattr(target, 'active'):
+                    vals['active'] = False
+                    
             elif request.state in ('draft', 'cancelled'):
                 if hasattr(target, 'sh_activation_state'):
                     vals['sh_activation_state'] = 'draft'
-                    vals['active'] = False
                 elif hasattr(target, 'sh_state'):
                     vals['sh_state'] = 'draft'
                 elif hasattr(target, 'state'):
                     field = target._fields.get('state')
                     if field and field.type == 'selection' and 'draft' in dict(field.selection if isinstance(field.selection, list) else field.selection(target)):
                         vals['state'] = 'draft'
+                        
+                if request.trigger_event in ('create', 'manual') and hasattr(target, 'active'):
+                    vals['active'] = False
                     
             if vals:
                 # If activating, also set standard Odoo active boolean if it exists
@@ -452,8 +464,8 @@ class ShApprovalRequest(models.Model):
     def action_submit(self):
         """Submit a draft or refused request into pending approval."""
         for request in self:
-            if request.state not in ('draft', 'refused'):
-                raise UserError(_('Only draft or refused requests can be submitted.'))
+            if request.state not in ('draft', 'refused', 'cancelled'):
+                raise UserError(_('Only draft, refused, or cancelled requests can be submitted.'))
             if not request.line_ids:
                 self.env['sh.approval.engine']._prepare_request_lines(request)
             request._ensure_access_token()
@@ -466,7 +478,9 @@ class ShApprovalRequest(models.Model):
             if not self.env.context.get('sh_keep_modification_summary'):
                 values['modification_summary'] = False
             request.sudo().write(values)
-            request.sudo().line_ids.filtered(lambda l: l.state == 'draft').write({'state': 'pending'})
+            first_draft = request.line_ids.filtered(lambda l: l.state == 'draft').sorted('sequence')[:1]
+            if first_draft:
+                first_draft.sudo().write({'state': 'pending'})
             request._activate_current_level()
             request._log_event('submitted', _('Approval request submitted.'))
             request._notify_pending_lines(template_event=notification_event)
@@ -682,8 +696,8 @@ class ShApprovalRequest(models.Model):
     def action_resubmit(self):
         """Reset existing lines and resubmit the request after modification."""
         for request in self:
-            if request.state != 'draft':
-                raise UserError(_('Only draft requests can be resubmitted.'))
+            if request.state not in ('draft', 'cancelled'):
+                raise UserError(_('Only draft or cancelled requests can be resubmitted.'))
             previous_snapshot = json.loads(request.previous_snapshot or '{}')
             summary = request._compute_modification_summary(previous_snapshot)
             applicable_type = self.env['sh.approval.engine']._find_applicable_approval_type(request._get_target_record())
@@ -695,7 +709,7 @@ class ShApprovalRequest(models.Model):
                 request.line_ids.sudo().unlink()
             else:
                 request.sudo().line_ids.filtered(lambda line: line.state not in ('approved', 'auto_approved')).sudo().write({
-                    'state': 'pending',
+                    'state': 'draft',
                     'action_user_id': False,
                     'action_date': False,
                     'notification_date': False,
@@ -704,17 +718,15 @@ class ShApprovalRequest(models.Model):
                     'activation_date': False,
                 })
             request.sudo().write({'resubmission_count': request.resubmission_count + 1})
+            request.sudo()._compute_record_name()
             request.sudo().write({
                 'modification_summary': summary,
                 'previous_snapshot': json.dumps(request._serialize_snapshot(), default=str),
             })
             request._log_event('resubmitted', summary or _('Request resubmitted after modification.'))
             if not request.line_ids:
+                request.sudo().write({'state': 'draft'})
                 self.env['sh.approval.engine']._prepare_request_lines(request)
-            else:
-                request.sudo().line_ids.filtered(lambda line: line.state in ('pending', 'escalated')).sudo().write({
-                    'notification_date': False,
-                })
             request.with_context(
                 sh_keep_modification_summary=True,
                 sh_submit_notification_event='resubmission',
@@ -729,7 +741,12 @@ class ShApprovalRequest(models.Model):
             record_to_activity.activity_unlink(['mail.mail_activity_data_todo'])
             request.sudo().line_ids.filtered(lambda item: item.state in ('pending', 'escalated')).sudo().write({'state': 'cancelled'})
             request.sudo().write({'state': 'cancelled', 'completed_date': fields.Datetime.now()})
-            request._log_event('cancelled', _('Approval request cancelled.'))
+            request._log_event('cancelled', _('Approval request cancelled by %s.') % self.env.user.name)
+            request._notify_template_for_partners(
+                request._get_email_template('cancelled'),
+                request._approval_partners(include_requester=True, include_approvers=True),
+                action='view'
+            )
 
     def action_force_approve(self):
         """UI wrapper that lets authorized users force approve a request."""
@@ -810,7 +827,18 @@ class ShApprovalRequest(models.Model):
                     user = partner.user_ids[:1]
                     if user:
                         target = request._get_target_record()
-                        record_to_activity = target if target and hasattr(target, 'activity_schedule') else request
+                        # Standard mail.activity creation subscribes the assignee to the
+                        # activity target. A generic create approval is triggered before
+                        # inherited models finish their own create work (for example,
+                        # hr.employee creates its work contact and chatter afterwards).
+                        # Scheduling on the approval request during that short window
+                        # prevents a duplicate mail.followers insert while preserving a
+                        # native, actionable To-Do for the approver.
+                        record_to_activity = request
+                        if not self.env.context.get('sh_approval_target_create_in_progress'):
+                            record_to_activity = (
+                                target if target and hasattr(target, 'activity_schedule') else request
+                            )
                         # Flush to avoid Odoo ORM unique constraint crash when adding followers during create
                         self.env['mail.followers'].flush_model()
                         record_to_activity.activity_schedule(
@@ -997,6 +1025,10 @@ class ShApprovalRequest(models.Model):
             'resubmission': (
                 self.approval_type_id.resubmission_template_id,
                 'sh_dynamic_approval.mail_template_sh_approval_resubmission',
+            ),
+            'cancelled': (
+                False,
+                'sh_dynamic_approval.mail_template_sh_approval_cancelled',
             ),
         }
         template, fallback_xmlid = mapping[event]

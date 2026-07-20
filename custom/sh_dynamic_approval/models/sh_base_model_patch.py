@@ -19,20 +19,18 @@ class BaseModelExtend(models.AbstractModel):
         compute='_compute_sh_is_under_approval',
         search='_search_sh_is_under_approval'
     )
+    sh_dynamic_approval_state = fields.Selection([
+        ('draft', 'Draft'),
+        ('pending', 'Pending Approval'),
+        ('approved', 'Approved'),
+        ('refused', 'Refused'),
+        ('cancelled', 'Cancelled'),
+    ], string='Dynamic Approval State', compute='_compute_sh_dynamic_approval_state', store=False, search='_search_sh_dynamic_approval_state')
+
     sh_can_cancel_approval = fields.Boolean(
         string='Can Cancel Approval',
         compute='_compute_sh_can_cancel_approval',
-    )
-    sh_dynamic_approval_state = fields.Selection(
-        [
-            ('draft', 'Draft'),
-            ('pending', 'Pending Approval'),
-            ('approved', 'Approved'),
-            ('refused', 'Refused'),
-            ('cancelled', 'Cancelled'),
-        ],
-        string='Approval State',
-        compute='_compute_sh_dynamic_approval_state',
+        search=False
     )
 
     def action_sh_send_for_manual_approval(self):
@@ -65,50 +63,6 @@ class BaseModelExtend(models.AbstractModel):
                 'next': {'type': 'ir.actions.client', 'tag': 'reload'},
             }
         }
-
-    def action_sh_cancel_dynamic_approval(self):
-        """Cancel the pending dynamic approval request for this record."""
-        self.ensure_one()
-        if not _approval_engine_available(self.env):
-            return True
-            
-        requests = self.env['sh.approval.request'].sudo().search([
-            ('res_model', '=', self._name),
-            ('res_id', '=', self.id),
-            ('state', 'in', ['draft', 'pending']),
-        ])
-        if not requests:
-            raise UserError(_('There is no pending approval request for this record.'))
-            
-        for request in requests:
-            if request.requester_id != self.env.user and not self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin'):
-                raise UserError(_('You are not authorized to cancel this approval request. Only the requester or an Administrator can cancel it.'))
-            request.action_cancel()
-            
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'reload',
-        }
-
-    def _compute_sh_can_cancel_approval(self):
-        """Compute whether the current user can cancel the pending approval."""
-        if not _approval_engine_available(self.env):
-            for record in self:
-                record.sh_can_cancel_approval = False
-            return
-
-        for record in self:
-            requests = self.env['sh.approval.request'].sudo().search([
-                ('res_model', '=', record._name),
-                ('res_id', '=', record.id),
-                ('state', 'in', ('draft', 'pending'))
-            ])
-            can_cancel = False
-            for req in requests:
-                if req.requester_id == self.env.user or self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin'):
-                    can_cancel = True
-                    break
-            record.sh_can_cancel_approval = can_cancel
 
     def _compute_sh_dynamic_approval_state(self):
         """Compute the overall approval state of the record."""
@@ -159,6 +113,32 @@ class BaseModelExtend(models.AbstractModel):
         for record in self:
             record.sh_is_under_approval = record.id in pending_ids
 
+    def _compute_sh_can_cancel_approval(self):
+        """Compute if the current user can cancel the pending approval."""
+        if not _approval_engine_available(self.env):
+            for record in self:
+                record.sh_can_cancel_approval = False
+            return
+            
+        approval_engine = self.env['sh.approval.engine']
+        if self._name in approval_engine._excluded_models():
+            for record in self:
+                record.sh_can_cancel_approval = False
+            return
+
+        is_admin = self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin')
+        for record in self:
+            request = self.env['sh.approval.request'].sudo().search([
+                ('res_model', '=', self._name),
+                ('res_id', '=', record.id),
+                ('state', '=', 'pending')
+            ], limit=1)
+            
+            if request:
+                record.sh_can_cancel_approval = is_admin or request.requester_id == self.env.user
+            else:
+                record.sh_can_cancel_approval = False
+
     def _search_sh_is_under_approval(self, operator, value):
         """Allow searching records that are under approval."""
         if not _approval_engine_available(self.env) or operator not in ('=', '!=') or not isinstance(value, bool):
@@ -196,12 +176,11 @@ class BaseModelExtend(models.AbstractModel):
                     is_string = isinstance(arch, str)
                     doc = etree.fromstring(arch) if is_string else arch
                     
-                    # Ensure the field is present so invisible condition works
+                    # Ensure the fields are present so invisible condition works
                     field_node = etree.Element('field', name='sh_is_under_approval', invisible='1')
                     doc.insert(0, field_node)
-                    
-                    field_node_cancel = etree.Element('field', name='sh_can_cancel_approval', invisible='1')
-                    doc.insert(0, field_node_cancel)
+                    can_cancel_field_node = etree.Element('field', name='sh_can_cancel_approval', invisible='1')
+                    doc.insert(0, can_cancel_field_node)
                     
                     # Create the alert banner
                     alert_node = etree.Element('div', **{
@@ -228,16 +207,16 @@ class BaseModelExtend(models.AbstractModel):
                             sheet.addprevious(header)
                         else:
                             doc.insert(0, header)
-                    
-                    # Create the cancel button inside the header
-                    button_node = etree.Element('button', **{
+                            
+                    # Inject Cancel Request Button
+                    cancel_btn_node = etree.Element('button', **{
                         'name': 'action_sh_cancel_dynamic_approval',
                         'type': 'object',
-                        'string': 'Cancel Request',
+                        'string': _('Cancel Request'),
                         'class': 'btn-secondary',
-                        'invisible': 'not sh_can_cancel_approval'
+                        'invisible': "not sh_can_cancel_approval"
                     })
-                    header.insert(0, button_node)
+                    header.insert(0, cancel_btn_node)
                     
                     # Inject Manual Approval UI
                     has_manual_rules = self.env['sh.approval.type'].sudo().search_count([('model', '=', self._name), ('trigger_event', '=', 'manual')]) > 0
@@ -286,8 +265,32 @@ class BaseModelExtend(models.AbstractModel):
         records = super().create(vals_list)
         if not _approval_engine_available(self.env):
             return records
-        self.env['sh.approval.engine']._trigger_for_records(records, 'create')
+        # ``mail.activity`` subscribes its assignee to the target thread. At
+        # this point an inherited model can still be completing its standard
+        # create flow (``hr.employee`` creates its work contact afterwards).
+        # Keep approval activities on their own request until that flow ends.
+        self.env['sh.approval.engine'].with_context(
+            sh_approval_target_create_in_progress=True,
+        )._trigger_for_records(records, 'create')
         return records
+
+    def action_sh_cancel_dynamic_approval(self):
+        """Cancel the pending dynamic approval requests."""
+        if not _approval_engine_available(self.env):
+            return
+            
+        for record in self:
+            requests = self.env['sh.approval.request'].sudo().search([
+                ('res_model', '=', self._name),
+                ('res_id', '=', record.id),
+                ('state', '=', 'pending')
+            ])
+            
+            for request in requests:
+                is_admin = self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin')
+                if not is_admin and request.requester_id != self.env.user:
+                    raise UserError(_('You are not authorized to cancel this approval request. Only the requester or an Administrator can cancel it.'))
+                request.action_cancel()
 
     def write(self, vals):
         changed_fields = list(vals.keys())
@@ -305,6 +308,16 @@ class BaseModelExtend(models.AbstractModel):
         if records_to_write:
             result = super(BaseModelExtend, records_to_write).write(vals)
             approval_engine._trigger_for_records(records_to_write, 'write', changed_fields=changed_fields)
+            
+            # Auto-resubmit cancelled requests for records that successfully bypassed write staging
+            for record in records_to_write:
+                cancelled_reqs = self.env['sh.approval.request'].sudo().search([
+                    ('res_model', '=', record._name),
+                    ('res_id', '=', record.id),
+                    ('state', '=', 'cancelled')
+                ])
+                for cancelled_req in cancelled_reqs:
+                    cancelled_req.action_resubmit()
             
         # For staged records, only apply the UNTRACKED fields that were not staged
         if staged_records:
