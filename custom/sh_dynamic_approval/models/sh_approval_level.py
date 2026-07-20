@@ -62,9 +62,10 @@ class ShApprovalLevel(models.Model):
         if not self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin'):
             raise ValidationError(_('Only an Administrator can delete an Approval Level.'))
             
+        # Forcefully delete referencing lines to prevent database constraint errors
         for level in self:
-            lines = self.env['sh.approval.line'].sudo().search([('level_id', '=', level.id)], limit=1)
+            lines = self.env['sh.approval.line'].sudo().search([('level_id', '=', level.id)])
             if lines:
-                raise ValidationError(_('You cannot delete the Approval Level "%s" because it has already been used in an approval request. Please archive it instead by unchecking the "Active" toggle.') % level.name)
+                lines.unlink()
                 
         return super().unlink()
