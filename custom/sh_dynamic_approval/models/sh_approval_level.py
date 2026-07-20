@@ -41,6 +41,8 @@ class ShApprovalLevel(models.Model):
 
 
 
+    active = fields.Boolean(default=True, string='Active')
+
     @api.constrains('approval_method', 'group_id', 'job_id', 'python_code')
     def _check_approval_method_config(self):
         """Validate method-specific approver configuration."""
@@ -55,3 +57,14 @@ class ShApprovalLevel(models.Model):
                 message = test_python_expr(expr=level.python_code.strip(), mode='eval')
                 if message:
                     raise ValidationError(_('Invalid Python expression: %s') % message)
+
+    def unlink(self):
+        if not self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin'):
+            raise ValidationError(_('Only an Administrator can delete an Approval Level.'))
+            
+        for level in self:
+            lines = self.env['sh.approval.line'].sudo().search([('level_id', '=', level.id)], limit=1)
+            if lines:
+                raise ValidationError(_('You cannot delete the Approval Level "%s" because it has already been used in an approval request. Please archive it instead by unchecking the "Active" toggle.') % level.name)
+                
+        return super().unlink()
