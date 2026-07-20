@@ -38,9 +38,9 @@ class ShApprovalController(http.Controller):
         if action == 'view':
             return request.redirect('/web#id=%s&model=sh.approval.request&view_type=form' % approval_request.id)
 
-        approver = request.env['res.users'].sudo().browse(uid).exists()
-        if not approver:
-            return request.not_found()
+        # SECURITY: Always execute the action as the currently logged-in user, 
+        # not the user the email was originally sent to (in case the link was forwarded or leaked).
+        approver = request.env.user
 
         from odoo.exceptions import UserError
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) Softhealer Technologies Pvt. Ltd.
 
-from odoo import api, models, _
+from odoo import api, fields, models, _
 from odoo.models import BaseModel
 from odoo.exceptions import UserError
 
@@ -19,6 +19,74 @@ class BaseModelExtend(models.AbstractModel):
         compute='_compute_sh_is_under_approval',
         search='_search_sh_is_under_approval'
     )
+    sh_dynamic_approval_state = fields.Selection(
+        [
+            ('draft', 'Draft'),
+            ('pending', 'Pending Approval'),
+            ('approved', 'Approved'),
+            ('refused', 'Refused'),
+            ('cancelled', 'Cancelled'),
+        ],
+        string='Approval State',
+        compute='_compute_sh_dynamic_approval_state',
+    )
+
+    def action_sh_send_for_manual_approval(self):
+        """Manually trigger the dynamic approval process for this record."""
+        self.ensure_one()
+        if not _approval_engine_available(self.env):
+            return True
+            
+        existing_request = self.env['sh.approval.request'].sudo().search([
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('state', '=', 'pending'),
+        ])
+        if existing_request:
+            raise UserError(_('This record is already pending approval.'))
+            
+        approval_engine = self.env['sh.approval.engine']
+        created_request = approval_engine._trigger_for_records(self, event='manual')
+        if not created_request:
+            raise UserError(_('No manual approval rules are configured or applicable for this record.'))
+            
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Approval Requested'),
+                'message': _('The manual approval request has been submitted successfully.'),
+                'type': 'success',
+                'sticky': False,
+                'next': {'type': 'ir.actions.client', 'tag': 'reload'},
+            }
+        }
+
+    def _compute_sh_dynamic_approval_state(self):
+        """Compute the overall approval state of the record."""
+        if not _approval_engine_available(self.env):
+            for record in self:
+                record.sh_dynamic_approval_state = False
+            return
+            
+        approval_engine = self.env['sh.approval.engine']
+        if self._name in approval_engine._excluded_models():
+            for record in self:
+                record.sh_dynamic_approval_state = False
+            return
+            
+        requests = self.env['sh.approval.request'].sudo().search([
+            ('res_model', '=', self._name),
+            ('res_id', 'in', self.ids),
+        ], order='id desc')
+        
+        state_map = {}
+        for req in requests:
+            if req.res_id not in state_map:
+                state_map[req.res_id] = req.state
+                
+        for record in self:
+            record.sh_dynamic_approval_state = state_map.get(record.id, 'draft')
 
     def _compute_sh_is_under_approval(self):
         """Compute whether the record is currently under pending approval."""
@@ -76,7 +144,9 @@ class BaseModelExtend(models.AbstractModel):
                 has_rules = self.env['sh.approval.type'].sudo().search_count([('model', '=', self._name)]) > 0
                 if has_rules:
                     from lxml import etree
-                    doc = etree.fromstring(arch)
+                    
+                    is_string = isinstance(arch, str)
+                    doc = etree.fromstring(arch) if is_string else arch
                     
                     # Ensure the field is present so invisible condition works
                     field_node = etree.Element('field', name='sh_is_under_approval', invisible='1')
@@ -97,18 +167,56 @@ class BaseModelExtend(models.AbstractModel):
                     span_node.text = _(" This record is locked. It is currently pending approval and tracked fields cannot be modified.")
                     alert_node.append(span_node)
                     
-                    # Insert at the top of the form (after header if it exists, otherwise at the top of sheet, or top of form)
+                    # Ensure header exists
                     sheet = doc.find('.//sheet')
                     header = doc.find('.//header')
                     
-                    if header is not None:
-                        header.addnext(alert_node)
-                    elif sheet is not None:
-                        sheet.insert(0, alert_node)
-                    else:
-                        doc.insert(1, alert_node) # insert after the field we just added
+                    if header is None:
+                        header = etree.Element('header')
+                        if sheet is not None:
+                            sheet.addprevious(header)
+                        else:
+                            doc.insert(0, header)
+                    
+                    # Inject Manual Approval UI
+                    has_manual_rules = self.env['sh.approval.type'].sudo().search_count([('model', '=', self._name), ('trigger_event', '=', 'manual')]) > 0
+                    if has_manual_rules:
+                        state_field_node = etree.Element('field', name='sh_dynamic_approval_state', invisible='1')
+                        doc.insert(0, state_field_node)
                         
-                    arch = etree.tostring(doc, encoding='unicode')
+                        btn_node = etree.Element('button', **{
+                            'name': 'action_sh_send_for_manual_approval',
+                            'type': 'object',
+                            'string': _('Submit For Dynamic Approval'),
+                            'class': 'btn-primary',
+                            'invisible': "sh_dynamic_approval_state in ('pending', 'approved')"
+                        })
+                        header.insert(0, btn_node)
+                        
+                        statusbar_node = etree.Element('field', **{
+                            'name': 'sh_dynamic_approval_state',
+                            'widget': 'statusbar',
+                            'statusbar_visible': 'draft,pending,approved,refused',
+                        })
+                        header.append(statusbar_node)
+                    
+                    # Insert warning banner
+                    header.addnext(alert_node)
+
+                    # Make all fields visually read-only when pending approval
+                    for node in doc.xpath(".//field"):
+                        field_name = node.get("name")
+                        if field_name in ('sh_is_under_approval', 'sh_dynamic_approval_state'):
+                            continue
+                        existing_readonly = node.get("readonly")
+                        if existing_readonly:
+                            if existing_readonly not in ("1", "True", "true"):
+                                node.set("readonly", f"({existing_readonly}) or sh_is_under_approval")
+                        else:
+                            node.set("readonly", "sh_is_under_approval")
+                        
+                    if is_string:
+                        arch = etree.tostring(doc, encoding='unicode')
                     
         return arch, view
 

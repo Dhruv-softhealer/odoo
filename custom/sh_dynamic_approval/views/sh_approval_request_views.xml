@@ -9,7 +9,7 @@
                 <field name="record_name"/>
                 <field name="requester_id"/>
                 <field name="approval_type_id"/>
-                <filter name="my_pending" string="My Pending Approvals" domain="[('state','=','pending'), '|', ('line_ids.approver_ids','in',[uid]), ('line_ids.alternative_user_id','=',uid)]"/>
+                <filter name="my_pending" string="My Pending Approvals" domain="[('state','=','pending'), ('can_current_user_approve', '=', True)]"/>
                 <filter name="approved" string="Approved" domain="[('state','=','approved')]"/>
                 <filter name="refused" string="Refused" domain="[('state','=','refused')]"/>
                 <filter name="cancelled" string="Cancelled" domain="[('state','=','cancelled')]"/>
@@ -26,7 +26,7 @@
         <field name="name">sh.approval.request.list</field>
         <field name="model">sh.approval.request</field>
         <field name="arch" type="xml">
-            <list duplicate="0" create="false">
+            <list create="false" duplicate="0">
                 <field name="name"/>
                 <field name="model_id"/>
                 <field name="record_name"/>
@@ -49,7 +49,7 @@
         <field name="name">sh.approval.request.form</field>
         <field name="model">sh.approval.request</field>
         <field name="arch" type="xml">
-            <form duplicate="0" create="false">
+            <form create="false" duplicate="0">
                 <header>
                     <button name="action_submit" type="object" string="Submit" class="btn-primary" invisible="state != 'draft'"/>
                     <button name="action_approve" type="object" string="Approve" class="btn-primary" invisible="state != 'pending' or not can_current_user_approve"/>
@@ -65,21 +65,22 @@
                 <sheet>
                     <group>
                         <group>
-                            <field name="name"/>
-                            <field name="approval_type_id"/>
-                            <field name="model_id"/>
-                            <field name="record_name"/>
+                            <field name="name" readonly="state != 'draft'"/>
+                            <field name="approval_type_id" groups="sh_dynamic_approval.group_sh_dynamic_approval_authorized_user" readonly="state != 'draft'"/>
+                            <field name="approval_type_id" groups="!sh_dynamic_approval.group_sh_dynamic_approval_authorized_user" options="{'no_open': True}" readonly="state != 'draft'"/>
+                            <field name="model_id" readonly="state != 'draft'"/>
+                            <field name="record_name" readonly="state != 'draft'"/>
                             <field name="can_current_user_approve" invisible="1"/>
-                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
                             <field name="access_token" invisible="1"/>
                         </group>
                         <group>
-                            <field name="requester_id"/>
-                            <field name="submitted_date"/>
-                            <field name="completed_date"/>
-                            <field name="trigger_event"/>
-                            <field name="current_level_id"/>
-                            <field name="resubmission_count"/>
+                            <field name="requester_id" readonly="state != 'draft'"/>
+                            <field name="submitted_date" readonly="state != 'draft'"/>
+                            <field name="completed_date" readonly="state != 'draft'"/>
+                            <field name="trigger_event" readonly="state != 'draft'"/>
+                            <field name="current_level_id" readonly="state != 'draft'"/>
+                            <field name="resubmission_count" readonly="state != 'draft'"/>
                             <field name="modification_summary" readonly="1"/>
                         </group>
                     </group>
@@ -87,7 +88,7 @@
                         <field name="staged_write_summary" readonly="1"/>
                     </group>
                     <group>
-                        <field name="last_refusal_reason"/>
+                        <field name="last_refusal_reason" readonly="state != 'draft'"/>
                     </group>
                     <notebook>
                         <page string="Approval Lines">
