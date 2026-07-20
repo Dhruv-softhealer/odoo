@@ -296,6 +296,10 @@ class BaseModelExtend(models.AbstractModel):
         changed_fields = list(vals.keys())
         if not _approval_engine_available(self.env):
             return super().write(vals)
+            
+        if self.env.context.get('sh_skip_dynamic_approval'):
+            return super().write(vals)
+            
         approval_engine = self.env['sh.approval.engine']
         approval_engine._check_record_locked(self, changed_fields=changed_fields)
         
