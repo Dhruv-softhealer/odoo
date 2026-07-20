@@ -219,7 +219,7 @@ class ShApprovalRequest(models.Model):
                         vals['state'] = 'cancel'
                         
                 if request.trigger_event in ('create', 'manual') and hasattr(target, 'active'):
-                    vals['active'] = False
+                    vals['active'] = True
                     
             elif request.state in ('draft', 'cancelled'):
                 if hasattr(target, 'sh_activation_state'):
@@ -232,7 +232,7 @@ class ShApprovalRequest(models.Model):
                         vals['state'] = 'draft'
                         
                 if request.trigger_event in ('create', 'manual') and hasattr(target, 'active'):
-                    vals['active'] = False
+                    vals['active'] = True
                     
             if vals:
                 # If activating, also set standard Odoo active boolean if it exists
