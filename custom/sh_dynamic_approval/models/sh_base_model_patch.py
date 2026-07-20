@@ -19,6 +19,10 @@ class BaseModelExtend(models.AbstractModel):
         compute='_compute_sh_is_under_approval',
         search='_search_sh_is_under_approval'
     )
+    sh_can_cancel_approval = fields.Boolean(
+        string='Can Cancel Approval',
+        compute='_compute_sh_can_cancel_approval',
+    )
     sh_dynamic_approval_state = fields.Selection(
         [
             ('draft', 'Draft'),
@@ -61,6 +65,50 @@ class BaseModelExtend(models.AbstractModel):
                 'next': {'type': 'ir.actions.client', 'tag': 'reload'},
             }
         }
+
+    def action_sh_cancel_dynamic_approval(self):
+        """Cancel the pending dynamic approval request for this record."""
+        self.ensure_one()
+        if not _approval_engine_available(self.env):
+            return True
+            
+        requests = self.env['sh.approval.request'].sudo().search([
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('state', 'in', ['draft', 'pending']),
+        ])
+        if not requests:
+            raise UserError(_('There is no pending approval request for this record.'))
+            
+        for request in requests:
+            if request.requester_id != self.env.user and not self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin'):
+                raise UserError(_('You are not authorized to cancel this approval request. Only the requester or an Administrator can cancel it.'))
+            request.action_cancel()
+            
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+        }
+
+    def _compute_sh_can_cancel_approval(self):
+        """Compute whether the current user can cancel the pending approval."""
+        if not _approval_engine_available(self.env):
+            for record in self:
+                record.sh_can_cancel_approval = False
+            return
+
+        for record in self:
+            requests = self.env['sh.approval.request'].sudo().search([
+                ('res_model', '=', record._name),
+                ('res_id', '=', record.id),
+                ('state', 'in', ('draft', 'pending'))
+            ])
+            can_cancel = False
+            for req in requests:
+                if req.requester_id == self.env.user or self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin'):
+                    can_cancel = True
+                    break
+            record.sh_can_cancel_approval = can_cancel
 
     def _compute_sh_dynamic_approval_state(self):
         """Compute the overall approval state of the record."""
@@ -152,6 +200,9 @@ class BaseModelExtend(models.AbstractModel):
                     field_node = etree.Element('field', name='sh_is_under_approval', invisible='1')
                     doc.insert(0, field_node)
                     
+                    field_node_cancel = etree.Element('field', name='sh_can_cancel_approval', invisible='1')
+                    doc.insert(0, field_node_cancel)
+                    
                     # Create the alert banner
                     alert_node = etree.Element('div', **{
                         'class': 'alert alert-warning text-center',
@@ -177,6 +228,16 @@ class BaseModelExtend(models.AbstractModel):
                             sheet.addprevious(header)
                         else:
                             doc.insert(0, header)
+                    
+                    # Create the cancel button inside the header
+                    button_node = etree.Element('button', **{
+                        'name': 'action_sh_cancel_dynamic_approval',
+                        'type': 'object',
+                        'string': 'Cancel Request',
+                        'class': 'btn-secondary',
+                        'invisible': 'not sh_can_cancel_approval'
+                    })
+                    header.insert(0, button_node)
                     
                     # Inject Manual Approval UI
                     has_manual_rules = self.env['sh.approval.type'].sudo().search_count([('model', '=', self._name), ('trigger_event', '=', 'manual')]) > 0

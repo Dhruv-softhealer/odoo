@@ -3,7 +3,7 @@
 
 {
     'name': 'Dynamic Approval Engine',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.0.1',
     'category': 'Human Resources',
     'summary': 'Configurable multi-model dynamic approval workflow engine',
     'description': """

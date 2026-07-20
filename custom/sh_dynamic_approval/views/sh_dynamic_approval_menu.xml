@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <menuitem id="menu_sh_dynamic_approval_root" name="Dynamic Approval" sequence="60" groups="sh_dynamic_approval.group_sh_dynamic_approval_approver,sh_dynamic_approval.group_sh_dynamic_approval_manager_readonly,sh_dynamic_approval.group_sh_dynamic_approval_authorized_user"/>
+    <menuitem id="menu_sh_dynamic_approval_root" name="Dynamic Approval" sequence="60" groups="sh_dynamic_approval.group_sh_dynamic_approval_approver,sh_dynamic_approval.group_sh_dynamic_approval_manager_readonly,sh_dynamic_approval.group_sh_dynamic_approval_admin"/>
 
     <menuitem id="menu_sh_dynamic_approval_dashboard" name="Dashboard" parent="menu_sh_dynamic_approval_root" sequence="10"/>
     <menuitem id="menu_sh_dynamic_approval_my_pending" name="My Pending Approvals" parent="menu_sh_dynamic_approval_dashboard" action="action_sh_approval_dashboard_my_pending" sequence="10"/>
     <menuitem id="menu_sh_dynamic_approval_approved" name="Approved" parent="menu_sh_dynamic_approval_dashboard" action="action_sh_approval_dashboard_approved" sequence="15"/>
     <menuitem id="menu_sh_dynamic_approval_refused" name="Refused" parent="menu_sh_dynamic_approval_dashboard" action="action_sh_approval_dashboard_refused" sequence="20"/>
-    <menuitem id="menu_sh_dynamic_approval_all" name="All Approvals" parent="menu_sh_dynamic_approval_dashboard" action="action_sh_approval_request" sequence="30" groups="sh_dynamic_approval.group_sh_dynamic_approval_authorized_user,sh_dynamic_approval.group_sh_dynamic_approval_manager_readonly"/>
+    <menuitem id="menu_sh_dynamic_approval_all" name="All Approvals" parent="menu_sh_dynamic_approval_dashboard" action="action_sh_approval_request" sequence="30" groups="sh_dynamic_approval.group_sh_dynamic_approval_admin,sh_dynamic_approval.group_sh_dynamic_approval_manager_readonly"/>
 
 
-    <menuitem id="menu_sh_dynamic_approval_configuration" name="Configuration" parent="menu_sh_dynamic_approval_root" sequence="90" groups="sh_dynamic_approval.group_sh_dynamic_approval_authorized_user"/>
+    <menuitem id="menu_sh_dynamic_approval_configuration" name="Configuration" parent="menu_sh_dynamic_approval_root" sequence="90" groups="sh_dynamic_approval.group_sh_dynamic_approval_admin"/>
     <menuitem id="menu_sh_dynamic_approval_type" name="Approval Types" parent="menu_sh_dynamic_approval_configuration" action="action_sh_approval_type" sequence="10"/>
     <menuitem id="menu_sh_approval_python_template" name="Python Code Templates" parent="menu_sh_dynamic_approval_configuration" action="action_sh_approval_python_template" sequence="20"/>
 </odoo>

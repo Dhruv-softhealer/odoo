@@ -86,27 +86,17 @@ class ShApprovalEngine(models.AbstractModel):
         locked_record_ids = set(pending_requests.mapped('res_id'))
         
         if changed_fields:
-            for request in pending_requests:
-                tracked_fields = set(request.approval_type_id.update_field_ids.mapped('name'))
-                # Implicitly lock state fields so native workflow buttons cannot bypass pending approvals
-                implicit_states = {'state', 'sh_state', 'sh_activation_state'}
-                if tracked_fields:
-                    tracked_fields.update(implicit_states)
-                    if not set(changed_fields).intersection(tracked_fields):
-                        locked_record_ids.discard(request.res_id)
-                else:
-                    # Fully lock the record, but whitelist chatter, activity, and implicit state fields
-                    allowed_fields = implicit_states.copy()
-                    allowed_fields.update([
-                        f for f in changed_fields 
-                        if f.startswith('message_') or f.startswith('activity_') or f in ('access_token', 'access_url')
-                    ])
-                    # If the write ONLY contains allowed fields, bypass the lock
-                    if not set(changed_fields) - allowed_fields:
-                        locked_record_ids.discard(request.res_id)
+            # Only allow standard chatter and access fields to be written to avoid crashing mail threads
+            allowed_fields = {
+                f for f in changed_fields 
+                if f.startswith('message_') or f.startswith('activity_') or f in ('access_token', 'access_url')
+            }
+            # If the write ONLY contains allowed fields, bypass the lock
+            if not set(changed_fields) - allowed_fields:
+                locked_record_ids.clear()
                     
         if locked_record_ids:
-            raise UserError(_('This record is locked because it is pending approval.'))
+            raise UserError(_('This record is completely locked because it is pending approval. It cannot be modified or processed.'))
 
     @api.model
     def _trigger_for_records(self, records, event, changed_fields=None):
@@ -361,7 +351,7 @@ class ShApprovalEngine(models.AbstractModel):
     @api.model
     def action_force_approve(self, request):
         """Force approve a request for authorized users."""
-        if not self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_authorized_user'):
+        if not self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin'):
             raise UserError(_('Only an authorized user can force approve a request.'))
         request.with_user(self.env.user).with_context(sh_skip_dynamic_approval=True)._force_approve_by_authorized_user(
             self.env.user
@@ -371,7 +361,7 @@ class ShApprovalEngine(models.AbstractModel):
     @api.model
     def action_manual_escalate(self, request):
         """Manually escalate a request for authorized users."""
-        if not self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_authorized_user'):
+        if not self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin'):
             raise UserError(_('Only an authorized user can manually escalate a request.'))
         request.with_user(self.env.user).with_context(sh_skip_dynamic_approval=True)._manual_escalate_by_authorized_user(
             self.env.user

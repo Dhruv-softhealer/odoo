@@ -55,10 +55,8 @@ class ShApprovalController(http.Controller):
             return request.redirect('/web#id=%s&model=sh.approval.request&view_type=form' % approval_request.id)
 
         if action == 'approve':
-            try:
-                approval_request.with_user(approver).action_approve()
-            except UserError:
-                pass
+            # As per requirements, do not directly approve from the link.
+            # Instead, simply redirect to the form view where UI access rights apply.
             return request.redirect('/web#id=%s&model=sh.approval.request&view_type=form' % approval_request.id)
 
     @http.route('/sh_dynamic_approval/close_window', type='http', auth='public')

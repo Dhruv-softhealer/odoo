@@ -119,7 +119,7 @@ class ShApprovalRequest(models.Model):
         """Compute whether the current user may approve at least one pending line."""
         current_user = self.env.user
         for request in self:
-            if not current_user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_approver') and not current_user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_authorized_user'):
+            if not current_user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_approver') and not current_user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin'):
                 request.can_current_user_approve = False
                 continue
             if not request.approval_type_id.allow_self_approval and request.requester_id == current_user:
@@ -136,7 +136,7 @@ class ShApprovalRequest(models.Model):
             raise NotImplementedError(_('Search on can_current_user_approve only supports "=" True'))
         
         current_user = self.env.user
-        if not current_user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_approver') and not current_user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_authorized_user'):
+        if not current_user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_approver') and not current_user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin'):
             return [('id', '=', False)]
             
         matching_lines = self.env['sh.approval.line'].sudo().search([
@@ -514,7 +514,7 @@ class ShApprovalRequest(models.Model):
         self.ensure_one()
         if self.state != 'pending':
             raise UserError(_('Only pending approval requests can be approved.'))
-        if not user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_approver') and not user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_authorized_user'):
+        if not user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_approver') and not user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin'):
             raise UserError(_('You do not have the necessary access rights (Approver) to approve this request.'))
         if not self.approval_type_id.allow_self_approval and self.requester_id == user:
             raise UserError(_('You cannot approve your own request. Self-approval is disabled for this type.'))
@@ -581,7 +581,7 @@ class ShApprovalRequest(models.Model):
         self.ensure_one()
         if self.state != 'pending':
             raise UserError(_('Only pending approval requests can be force approved.'))
-        if not self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_authorized_user'):
+        if not self.env.user.has_group('sh_dynamic_approval.group_sh_dynamic_approval_admin'):
             raise UserError(_('Only an authorized user can force approve a request.'))
 
         for line in self.sudo().line_ids.filtered(lambda item: item.state in ('pending', 'escalated')):
@@ -672,7 +672,7 @@ class ShApprovalRequest(models.Model):
             if request.state != 'refused':
                 raise UserError(_('Only refused requests can be modified.'))
             if request.requester_id != self.env.user and not self.env.user.has_group(
-                'sh_dynamic_approval.group_sh_dynamic_approval_authorized_user'
+                'sh_dynamic_approval.group_sh_dynamic_approval_admin'
             ):
                 raise UserError(_('Only the requester or an authorized user can modify this request.'))
             request.sudo().write({'state': 'draft'})
@@ -811,6 +811,8 @@ class ShApprovalRequest(models.Model):
                     if user:
                         target = request._get_target_record()
                         record_to_activity = target if target and hasattr(target, 'activity_schedule') else request
+                        # Flush to avoid Odoo ORM unique constraint crash when adding followers during create
+                        self.env['mail.followers'].flush_model()
                         record_to_activity.activity_schedule(
                             'mail.mail_activity_data_todo',
                             user_id=user.id,
@@ -855,6 +857,9 @@ class ShApprovalRequest(models.Model):
                 'sh_notification_level_name': line.level_id.name if line else '',
                 'sh_notification_line_id': line.id if line else False,
             }
+            
+            # Flush to avoid Odoo ORM unique constraint crash when adding followers
+            self.env['mail.followers'].flush_model()
             template.with_context(**context_vals).send_mail(
                 self.id,
                 force_send=False,
@@ -930,7 +935,7 @@ class ShApprovalRequest(models.Model):
         if admin_user:
             partners |= admin_user.sudo().partner_id
         authorized_group = self.env.ref(
-            'sh_dynamic_approval.group_sh_dynamic_approval_authorized_user',
+            'sh_dynamic_approval.group_sh_dynamic_approval_admin',
             raise_if_not_found=False,
         )
         if authorized_group:
@@ -1074,9 +1079,9 @@ class ShApprovalLine(models.Model):
     def _compute_approver_display(self):
         for line in self:
             if line.level_id.approval_method == 'group' and line.level_id.group_id:
-                line.approver_display = line.level_id.group_id.name
+                line.approver_display = line.level_id.sudo().group_id.name
             elif line.level_id.approval_method == 'job' and line.level_id.job_id:
-                line.approver_display = line.level_id.job_id.name
+                line.approver_display = line.level_id.sudo().job_id.name
             else:
                 line.approver_display = ', '.join(line.approver_ids.sudo().mapped('name'))
 
