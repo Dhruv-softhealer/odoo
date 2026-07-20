@@ -175,7 +175,7 @@ class ShApprovalEngine(models.AbstractModel):
         if event == 'write' and changed_fields:
             field_names = set(changed_fields)
             approval_types = approval_types.filtered(
-                lambda item: bool(field_names.intersection(set(item.update_field_ids.mapped('name'))))
+                lambda item: not item.update_field_ids or bool(field_names.intersection(set(item.update_field_ids.mapped('name'))))
             )
         company = self._record_company(record)
         matching_types = approval_types.filtered(
@@ -195,7 +195,7 @@ class ShApprovalEngine(models.AbstractModel):
         if event == 'write' and changed_fields:
             field_names = set(changed_fields)
             approval_types = approval_types.filtered(
-                lambda item: bool(field_names.intersection(set(item.update_field_ids.mapped('name'))))
+                lambda item: not item.update_field_ids or bool(field_names.intersection(set(item.update_field_ids.mapped('name'))))
             )
         return approval_types
 
